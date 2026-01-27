@@ -1,0 +1,23 @@
+@import "tailwindcss";
+
+:root {
+  --neo-green: 57 255 20;
+  --neo-blue: 0 191 255;
+  --neo-pink: 255 105 180;
+  --neo-yellow: 255 255 0;
+  --neo-red: 239 68 68;
+}
+
+@layer base {
+  body {
+    @apply bg-white text-black antialiased;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold uppercase tracking-tight;
+  }
+  
+  button {
+    @apply font-bold uppercase;
+  }
+}

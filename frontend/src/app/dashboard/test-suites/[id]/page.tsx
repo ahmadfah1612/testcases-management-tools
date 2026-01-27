@@ -1,0 +1,434 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { api } from '@/lib/api';
+import { NeoCard } from '@/components/neobrutalism/neo-card';
+import { NeoButton } from '@/components/neobrutalism/neo-button';
+import { NeoInput } from '@/components/neobrutalism/neo-input';
+import { toast } from 'sonner';
+import { ArrowLeft, FolderOpen, FileText, Plus, Edit2, Trash2, ChevronDown, ChevronRight } from 'lucide-react';
+
+interface TestCase {
+  id: string;
+  title: string;
+  description: string;
+  status: string;
+  priority: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface TestSuite {
+  id: string;
+  name: string;
+  description: string | null;
+  createdAt: string;
+  updatedAt: string;
+  _count: {
+    testCases: number;
+  };
+  children: TestSuite[];
+}
+
+export default function TestSuiteDetailPage() {
+  const params = useParams();
+  const router = useRouter();
+  const suiteId = params.id as string;
+
+  const [suite, setSuite] = useState<TestSuite | null>(null);
+  const [testCases, setTestCases] = useState<TestCase[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [expandedChildren, setExpandedChildren] = useState<Set<string>>(new Set());
+  const [editForm, setEditForm] = useState({
+    name: '',
+    description: ''
+  });
+
+  useEffect(() => {
+    fetchData();
+  }, [suiteId]);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const [suiteData, casesData] = await Promise.all([
+        api.get(`/testsuites/${suiteId}`),
+        api.get(`/testcases?suiteId=${suiteId}`)
+      ]);
+      setSuite(suiteData);
+      setTestCases(casesData);
+      setEditForm({
+        name: suiteData.name,
+        description: suiteData.description || ''
+      });
+    } catch (error) {
+      toast.error('Failed to load test suite');
+      router.push('/dashboard/test-suites');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+      await api.put(`/testsuites/${suiteId}`, {
+        name: editForm.name,
+        description: editForm.description || null
+      });
+      toast.success('Test suite updated successfully');
+      setShowEditModal(false);
+      fetchData();
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to update test suite');
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      await api.delete(`/testsuites/${suiteId}`);
+      toast.success('Test suite deleted successfully');
+      router.push('/dashboard/test-suites');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to delete test suite');
+    }
+  };
+
+  const handleDeleteTestCase = async (caseId: string) => {
+    if (!confirm('Are you sure you want to delete this test case?')) {
+      return;
+    }
+
+    try {
+      await api.delete(`/testcases/${caseId}`);
+      toast.success('Test case deleted successfully');
+      fetchData();
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to delete test case');
+    }
+  };
+
+  const toggleChild = (childId: string) => {
+    setExpandedChildren(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(childId)) {
+        newSet.delete(childId);
+      } else {
+        newSet.add(childId);
+      }
+      return newSet;
+    });
+  };
+
+  const getStatusColor = (status: string) => {
+    const colors: Record<string, string> = {
+      'DRAFT': 'bg-gray-200',
+      'READY': 'bg-[rgb(57,255,20)]',
+      'REVIEW': 'bg-[rgb(255,255,0)]',
+      'APPROVED': 'bg-[rgb(0,191,255)]'
+    };
+    return colors[status] || 'bg-gray-200';
+  };
+
+  const getPriorityColor = (priority: string) => {
+    const colors: Record<string, string> = {
+      'LOW': 'bg-gray-200',
+      'MEDIUM': 'bg-[rgb(0,191,255)]',
+      'HIGH': 'bg-[rgb(255,105,180)]',
+      'CRITICAL': 'bg-[rgb(239,68,68)]'
+    };
+    return colors[priority] || 'bg-gray-200';
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-100 p-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center py-12">
+            <div className="text-2xl font-bold uppercase">Loading...</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!suite) {
+    return null;
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-100 p-8">
+      <div className="max-w-7xl mx-auto space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <NeoButton
+              variant="secondary"
+              onClick={() => router.back()}
+              className="flex items-center gap-2"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              Back
+            </NeoButton>
+            <div>
+              <h1 className="text-4xl font-bold uppercase">{suite.name}</h1>
+              <p className="text-gray-600">
+                {suite.description || 'No description provided'}
+              </p>
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <NeoButton
+              variant="secondary"
+              onClick={() => setShowEditModal(true)}
+              className="flex items-center gap-2"
+            >
+              <Edit2 className="w-5 h-5" />
+              Edit
+            </NeoButton>
+            <NeoButton
+              variant="danger"
+              onClick={() => setShowDeleteModal(true)}
+              className="flex items-center gap-2"
+            >
+              <Trash2 className="w-5 h-5" />
+              Delete
+            </NeoButton>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-6">
+            <NeoCard>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold uppercase flex items-center gap-2">
+                  <FileText className="w-6 h-6" />
+                  Test Cases
+                </h2>
+                <NeoButton
+                  variant="primary"
+                  onClick={() => router.push(`/dashboard/test-suites/${suiteId}/testcases/new`)}
+                  className="flex items-center gap-2"
+                >
+                  <Plus className="w-5 h-5" />
+                  Add Test Case
+                </NeoButton>
+              </div>
+
+              {testCases.length === 0 ? (
+                <div className="text-center py-12">
+                  <FileText className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+                  <h3 className="text-xl font-bold uppercase mb-2">No Test Cases Yet</h3>
+                  <p className="text-gray-600 mb-6">
+                    Add test cases to this suite to get started
+                  </p>
+                  <NeoButton
+                    variant="primary"
+                    onClick={() => router.push(`/dashboard/test-suites/${suiteId}/testcases/new`)}
+                  >
+                    Create Test Case
+                  </NeoButton>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {testCases.map((testCase) => (
+                    <NeoCard
+                      key={testCase.id}
+                      className="hover:translate-y-1 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all cursor-pointer"
+                      onClick={() => router.push(`/dashboard/testcases/${testCase.id}`)}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <h3 className="text-lg font-bold uppercase">{testCase.title}</h3>
+                            <span className={`px-3 py-1 text-xs font-bold border-2 border-black ${getStatusColor(testCase.status)}`}>
+                              {testCase.status}
+                            </span>
+                            <span className={`px-3 py-1 text-xs font-bold border-2 border-black ${getPriorityColor(testCase.priority)}`}>
+                              {testCase.priority}
+                            </span>
+                          </div>
+                          {testCase.description && (
+                            <p className="text-gray-600 text-sm line-clamp-2">{testCase.description}</p>
+                          )}
+                        </div>
+                        <NeoButton
+                          variant="danger"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteTestCase(testCase.id);
+                          }}
+                          className="ml-4 px-3 py-2"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </NeoButton>
+                      </div>
+                    </NeoCard>
+                  ))}
+                </div>
+              )}
+            </NeoCard>
+          </div>
+
+          <div className="space-y-6">
+            <NeoCard>
+              <h2 className="text-xl font-bold uppercase mb-4 flex items-center gap-2">
+                <FolderOpen className="w-6 h-6" />
+                Suite Details
+              </h2>
+              <div className="space-y-4">
+                <div>
+                  <div className="text-sm font-bold uppercase text-gray-600 mb-1">Name</div>
+                  <div className="font-bold">{suite.name}</div>
+                </div>
+                {suite.description && (
+                  <div>
+                    <div className="text-sm font-bold uppercase text-gray-600 mb-1">Description</div>
+                    <div className="text-sm">{suite.description}</div>
+                  </div>
+                )}
+                <div>
+                  <div className="text-sm font-bold uppercase text-gray-600 mb-1">Test Cases</div>
+                  <div className="text-2xl font-bold">{suite._count.testCases}</div>
+                </div>
+                <div>
+                  <div className="text-sm font-bold uppercase text-gray-600 mb-1">Created</div>
+                  <div className="text-sm">
+                    {new Date(suite.createdAt).toLocaleDateString()}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-sm font-bold uppercase text-gray-600 mb-1">Last Updated</div>
+                  <div className="text-sm">
+                    {new Date(suite.updatedAt).toLocaleDateString()}
+                  </div>
+                </div>
+              </div>
+            </NeoCard>
+
+            {suite.children && suite.children.length > 0 && (
+              <NeoCard>
+                <h2 className="text-xl font-bold uppercase mb-4">Sub-Suites</h2>
+                <div className="space-y-2">
+                  {suite.children.map((child) => (
+                    <div key={child.id}>
+                      <div
+                        onClick={() => toggleChild(child.id)}
+                        className="flex items-center justify-between p-3 border-2 border-black bg-white cursor-pointer hover:bg-gray-50 transition font-bold"
+                      >
+                        <div className="flex items-center gap-2">
+                          {expandedChildren.has(child.id) ? (
+                            <ChevronDown className="w-4 h-4" />
+                          ) : (
+                            <ChevronRight className="w-4 h-4" />
+                          )}
+                          <FolderOpen className="w-5 h-5 text-[rgb(57,255,20)]" />
+                          {child.name}
+                        </div>
+                        <div className="text-xs border-2 border-black px-2 py-1">
+                          {child._count?.testCases || 0} cases
+                        </div>
+                      </div>
+                      {expandedChildren.has(child.id) && (
+                        <div className="ml-6 mt-2 space-y-2">
+                          <div className="p-3 bg-gray-100 border border-black text-sm">
+                            {child.description || 'No description'}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </NeoCard>
+            )}
+          </div>
+        </div>
+
+        {showEditModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+            <NeoCard className="w-full max-w-md">
+              <h2 className="text-2xl font-bold uppercase mb-6">Edit Test Suite</h2>
+
+              <form onSubmit={handleUpdate} className="space-y-4">
+                <div>
+                  <label className="block font-bold uppercase mb-2">Suite Name</label>
+                  <NeoInput
+                    type="text"
+                    value={editForm.name}
+                    onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                    required
+                    className="w-full"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold uppercase mb-2">Description</label>
+                  <textarea
+                    value={editForm.description}
+                    onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                    className="w-full p-4 border-2 border-black bg-white focus:border-3 focus:outline-none focus:border-[rgb(0,191,255)] transition-all min-h-[120px]"
+                    rows={4}
+                  />
+                </div>
+
+                <div className="flex gap-4 pt-4">
+                  <NeoButton
+                    type="button"
+                    variant="secondary"
+                    onClick={() => setShowEditModal(false)}
+                    className="flex-1"
+                  >
+                    Cancel
+                  </NeoButton>
+                  <NeoButton type="submit" variant="primary" className="flex-1">
+                    Save Changes
+                  </NeoButton>
+                </div>
+              </form>
+            </NeoCard>
+          </div>
+        )}
+
+        {showDeleteModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+            <NeoCard className="w-full max-w-md">
+              <h2 className="text-2xl font-bold uppercase mb-4">Delete Test Suite</h2>
+
+              <div className="space-y-4">
+                <div className="border-2 border-black bg-[rgb(255,255,0)]/20 p-4">
+                  <p className="font-bold">
+                    Are you sure you want to delete <strong>&quot;{suite.name}&quot;</strong>?
+                  </p>
+                  <p className="text-sm mt-2 text-gray-600">
+                    This will also delete all {suite._count.testCases} test cases in this suite.
+                    This action cannot be undone.
+                  </p>
+                </div>
+
+                <div className="flex gap-4 pt-4">
+                  <NeoButton
+                    variant="secondary"
+                    onClick={() => setShowDeleteModal(false)}
+                    className="flex-1"
+                  >
+                    Cancel
+                  </NeoButton>
+                  <NeoButton
+                    variant="danger"
+                    onClick={handleDelete}
+                    className="flex-1"
+                  >
+                    Delete Suite
+                  </NeoButton>
+                </div>
+              </div>
+            </NeoCard>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

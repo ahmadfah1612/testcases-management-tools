@@ -1,0 +1,142 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id            String    @id @default(cuid())
+  username      String    @unique
+  email         String    @unique
+  passwordHash  String
+  createdAt     DateTime  @default(now())
+  
+  testSuites    TestSuite[]
+  testCases     TestCase[]
+  testCaseVersions TestCaseVersion[]
+  testPlans     TestPlan[]
+  testRuns      TestRun[]
+  testResults   TestResult[]
+  testSchedules TestSchedule[]
+}
+
+model TestSuite {
+  id        String     @id @default(cuid())
+  name      String
+  description String?
+  parentId  String?
+  parent    TestSuite? @relation("SuiteHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children  TestSuite[] @relation("SuiteHierarchy")
+  createdBy String
+  creator   User       @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  
+  testCases TestCase[]
+}
+
+model TestCase {
+  id              String             @id @default(cuid())
+  suiteId         String
+  suite           TestSuite          @relation(fields: [suiteId], references: [id], onDelete: Cascade)
+  title           String
+  description     String?
+  steps           String
+  expectedResult  String
+  status          String     @default("DRAFT")
+  priority        String     @default("MEDIUM")
+  tags            String
+  version         Int                @default(1)
+  createdBy       String
+  creator         User               @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+  updatedAt       DateTime           @updatedAt
+  createdAt       DateTime           @default(now())
+  
+  versions        TestCaseVersion[]
+  planAssignments TestPlanAssignment[]
+  results         TestResult[]
+}
+
+model TestCaseVersion {
+  id          String   @id @default(cuid())
+  testCaseId  String
+  testCase    TestCase @relation(fields: [testCaseId], references: [id], onDelete: Cascade)
+  version     Int
+  changes     String?
+  createdBy   String
+  creator     User     @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  
+  @@unique([testCaseId, version])
+}
+
+model TestPlan {
+  id          String               @id @default(cuid())
+  name        String
+  description String?
+  testCaseIds String
+  createdBy   String
+  creator     User                 @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  
+  assignments TestPlanAssignment[]
+  runs        TestRun[]
+  schedules   TestSchedule[]
+}
+
+model TestPlanAssignment {
+  id         String    @id @default(cuid())
+  testCaseId String
+  testCase   TestCase  @relation(fields: [testCaseId], references: [id], onDelete: Cascade)
+  planId     String
+  plan       TestPlan  @relation(fields: [planId], references: [id], onDelete: Cascade)
+  
+  @@unique([testCaseId, planId])
+}
+
+model TestRun {
+  id          String       @id @default(cuid())
+  testPlanId  String
+  testPlan    TestPlan     @relation(fields: [testPlanId], references: [id], onDelete: Cascade)
+  name        String
+  status      String     @default("RUNNING")
+  startedBy   String
+  starter     User         @relation(fields: [startedBy], references: [id], onDelete: Cascade)
+  startedAt   DateTime     @default(now())
+  completedAt DateTime?
+  
+  results     TestResult[]
+}
+
+model TestResult {
+  id             String        @id @default(cuid())
+  testRunId      String
+  testRun        TestRun       @relation(fields: [testRunId], references: [id], onDelete: Cascade)
+  testCaseId     String
+  testCase       TestCase      @relation(fields: [testCaseId], references: [id], onDelete: Cascade)
+  status         String     @default("SKIP")
+  actualResult   String?
+  screenshots    String
+  notes          String?
+  createdBy      String
+  creator        User          @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+}
+
+model TestSchedule {
+  id           String   @id @default(cuid())
+  testPlanId   String
+  testPlan     TestPlan @relation(fields: [testPlanId], references: [id], onDelete: Cascade)
+  name         String
+  cronExpression String
+  active       Boolean  @default(true)
+  createdBy    String
+  creator      User     @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+  lastRunAt    DateTime?
+  nextRunAt    DateTime?
+}
