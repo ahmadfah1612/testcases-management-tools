@@ -59,7 +59,7 @@ export default function TestSuiteDetailPage() {
         api.get(`/testcases?suiteId=${suiteId}`)
       ]);
       setSuite(suiteData);
-      setTestCases(casesData);
+      setTestCases(Array.isArray(casesData) ? casesData : casesData.data || []);
       setEditForm({
         name: suiteData.name,
         description: suiteData.description || ''
