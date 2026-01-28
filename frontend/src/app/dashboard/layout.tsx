@@ -103,7 +103,7 @@ export default function DashboardLayout({
           </nav>
         </aside>
 
-        <main className="flex-1" key={pathname}>{children}</main>
+        <main className="flex-1">{children}</main>
       </div>
     </div>
   );
