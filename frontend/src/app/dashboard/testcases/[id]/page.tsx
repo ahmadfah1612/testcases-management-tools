@@ -155,7 +155,7 @@ export default function TestCaseDetailPage() {
           <span className={`px-4 py-2 font-bold border-2 border-black uppercase ${getPriorityColor(testCase.priority)}`}>
             {testCase.priority}
           </span>
-          {testCase.tags.map((tag, index) => (
+          {Array.isArray(testCase.tags) && testCase.tags.map((tag: string, index: number) => (
             <span
               key={index}
               className="px-4 py-2 bg-[rgb(255,105,180)] border-2 border-black font-bold text-sm uppercase"
@@ -189,7 +189,7 @@ export default function TestCaseDetailPage() {
             Test Steps
           </h2>
           <div className="space-y-4">
-            {testCase.steps.map((step, index) => (
+            {Array.isArray(testCase.steps) && testCase.steps.map((step: any, index: number) => (
               <NeoCard key={index} className="bg-gray-50">
                 <div className="flex gap-4">
                   <div className="w-10 h-10 bg-[rgb(57,255,20)] border-2 border-black flex items-center justify-center font-bold text-lg flex-shrink-0">

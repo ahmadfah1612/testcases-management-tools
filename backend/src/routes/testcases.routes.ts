@@ -45,7 +45,9 @@ router.get('/', async (req: AuthRequest, res) => {
       suiteId: tc.suite_id,
       createdBy: tc.created_by,
       createdAt: tc.created_at,
-      updatedAt: tc.updated_at
+      updatedAt: tc.updated_at,
+      steps: typeof tc.steps === 'string' ? JSON.parse(tc.steps) : tc.steps,
+      tags: typeof tc.tags === 'string' ? JSON.parse(tc.tags) : tc.tags
     })) || [];
 
     res.json(formattedTestCases);
@@ -86,6 +88,8 @@ router.get('/:id', async (req: AuthRequest, res) => {
       createdBy: testCase.created_by,
       createdAt: testCase.created_at,
       updatedAt: testCase.updated_at,
+      steps: typeof testCase.steps === 'string' ? JSON.parse(testCase.steps) : testCase.steps,
+      tags: typeof testCase.tags === 'string' ? JSON.parse(testCase.tags) : testCase.tags,
       versions: versions?.map(v => ({
         ...v,
         testCaseId: v.test_case_id,
@@ -136,7 +140,9 @@ router.post('/', async (req: AuthRequest, res) => {
       suiteId: testCase.suite_id,
       createdBy: testCase.created_by,
       createdAt: testCase.created_at,
-      updatedAt: testCase.updated_at
+      updatedAt: testCase.updated_at,
+      steps: typeof testCase.steps === 'string' ? JSON.parse(testCase.steps) : testCase.steps,
+      tags: typeof testCase.tags === 'string' ? JSON.parse(testCase.tags) : testCase.tags
     };
 
     res.status(201).json(formattedTestCase);
@@ -192,7 +198,9 @@ router.put('/:id', async (req: AuthRequest, res) => {
       suiteId: updated.suite_id,
       createdBy: updated.created_by,
       createdAt: updated.created_at,
-      updatedAt: updated.updated_at
+      updatedAt: updated.updated_at,
+      steps: typeof updated.steps === 'string' ? JSON.parse(updated.steps) : updated.steps,
+      tags: typeof updated.tags === 'string' ? JSON.parse(updated.tags) : updated.tags
     };
 
     res.json(formattedTestCase);

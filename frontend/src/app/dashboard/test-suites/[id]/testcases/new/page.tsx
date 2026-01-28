@@ -221,9 +221,9 @@ export default function NewTestCasePage() {
                   <Plus className="w-5 h-5" />
                 </NeoButton>
               </div>
-              {formData.tags.length > 0 && (
+              {Array.isArray(formData.tags) && formData.tags.length > 0 && (
                 <div className="flex flex-wrap gap-2">
-                  {formData.tags.map((tag, index) => (
+                  {formData.tags.map((tag: string, index: number) => (
                     <span
                       key={index}
                       className="inline-flex items-center gap-1 px-3 py-1 bg-[rgb(57,255,20)] border-2 border-black text-sm font-bold"
@@ -263,7 +263,7 @@ export default function NewTestCasePage() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {formData.steps.map((step, index) => (
+                  {Array.isArray(formData.steps) && formData.steps.map((step: any, index: number) => (
                     <NeoCard key={index} className="bg-gray-50">
                       <div className="flex items-start gap-4">
                         <div className="w-10 h-10 bg-[rgb(57,255,20)] border-2 border-black flex items-center justify-center font-bold text-lg flex-shrink-0">

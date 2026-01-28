@@ -1,4 +1,53 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { api } from '@/lib/api';
+
+interface DashboardStats {
+  totalCases: number;
+  totalSuites: number;
+  totalPlans: number;
+  totalRuns: number;
+  passRate: number;
+  results: {
+    PASS?: number;
+    FAIL?: number;
+    SKIP?: number;
+  };
+}
+
 export default function DashboardPage() {
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchStats();
+  }, []);
+
+  const fetchStats = async () => {
+    try {
+      const data = await api.get('/reports/stats');
+      setStats(data);
+    } catch (error) {
+      console.error('Failed to fetch dashboard stats:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-100 p-8">
+        <h1 className="text-4xl font-bold uppercase mb-8">Dashboard</h1>
+        <div className="text-center py-12">
+          <div className="text-2xl font-bold uppercase">Loading...</div>
+        </div>
+      </div>
+    );
+  }
+
+  const results = stats?.results || {};
+
   return (
     <div className="min-h-screen bg-gray-100 p-8">
       <h1 className="text-4xl font-bold uppercase mb-8">Dashboard</h1>
@@ -6,19 +55,19 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <div className="bg-white border-3 border-black p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
           <div className="text-sm font-bold uppercase text-gray-600 mb-2">Total Test Cases</div>
-          <p className="text-5xl font-bold">0</p>
+          <p className="text-5xl font-bold">{stats?.totalCases || 0}</p>
         </div>
         <div className="bg-white border-3 border-black p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
           <div className="text-sm font-bold uppercase text-gray-600 mb-2">Total Test Suites</div>
-          <p className="text-5xl font-bold">0</p>
+          <p className="text-5xl font-bold">{stats?.totalSuites || 0}</p>
         </div>
         <div className="bg-white border-3 border-black p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
           <div className="text-sm font-bold uppercase text-gray-600 mb-2">Total Test Plans</div>
-          <p className="text-5xl font-bold">0</p>
+          <p className="text-5xl font-bold">{stats?.totalPlans || 0}</p>
         </div>
         <div className="bg-white border-3 border-black p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
           <div className="text-sm font-bold uppercase text-gray-600 mb-2">Total Test Runs</div>
-          <p className="text-5xl font-bold">0</p>
+          <p className="text-5xl font-bold">{stats?.totalRuns || 0}</p>
         </div>
       </div>
 
@@ -28,15 +77,15 @@ export default function DashboardPage() {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <span className="font-bold">Passed</span>
-              <span className="text-3xl font-bold text-green-500">0</span>
+              <span className="text-3xl font-bold text-green-500">{results.PASS || 0}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="font-bold">Failed</span>
-              <span className="text-3xl font-bold text-red-500">0</span>
+              <span className="text-3xl font-bold text-red-500">{results.FAIL || 0}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="font-bold">Skipped</span>
-              <span className="text-3xl font-bold text-purple-500">0</span>
+              <span className="text-3xl font-bold text-purple-500">{results.SKIP || 0}</span>
             </div>
 
           </div>
@@ -45,7 +94,7 @@ export default function DashboardPage() {
         <div className="bg-white border-3 border-black p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
           <h2 className="text-lg font-bold uppercase mb-2">Pass Rate</h2>
           <div className="text-center mt-4">
-            <p className="text-7xl font-bold">0%</p>
+            <p className="text-7xl font-bold">{Math.round(stats?.passRate || 0)}%</p>
           </div>
         </div>
       </div>

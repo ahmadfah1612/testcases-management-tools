@@ -9,16 +9,16 @@ router.use(authMiddleware);
 router.get('/stats', async (req: AuthRequest, res) => {
   try {
     const [casesCount, suitesCount, plansCount, runsCount] = await Promise.all([
-      supabase.from('test_cases').select('*', { count: 'exact', head: true }).eq('created_by', req.userId!),
-      supabase.from('test_suites').select('*', { count: 'exact', head: true }).eq('created_by', req.userId!),
-      supabase.from('test_plans').select('*', { count: 'exact', head: true }).eq('created_by', req.userId!),
-      supabase.from('test_runs').select('*', { count: 'exact', head: true }).eq('started_by', req.userId!)
+      supabase.from('test_cases').select('*', { count: 'exact', head: true }).eq('created_by', req.dbUserId!),
+      supabase.from('test_suites').select('*', { count: 'exact', head: true }).eq('created_by', req.dbUserId!),
+      supabase.from('test_plans').select('*', { count: 'exact', head: true }).eq('created_by', req.dbUserId!),
+      supabase.from('test_runs').select('*', { count: 'exact', head: true }).eq('started_by', req.dbUserId!)
     ]);
 
     const { data: resultsData } = await supabase
       .from('test_results')
       .select('status')
-      .eq('created_by', req.userId!);
+      .eq('created_by', req.dbUserId!);
 
     const totalCases = casesCount.count || 0;
     const totalSuites = suitesCount.count || 0;
@@ -58,7 +58,7 @@ router.get('/trends', async (req: AuthRequest, res) => {
     const { data: trendsData } = await supabase
       .from('test_results')
       .select('status')
-      .eq('created_by', req.userId!)
+      .eq('created_by', req.dbUserId!)
       .gte('created_at', thirtyDaysAgo.toISOString());
 
     const trends: any = {};

@@ -34,7 +34,7 @@ export default function DashboardLayout({
   const navigation = [
     { href: '/dashboard', label: 'Dashboard', icon: Home },
     { href: '/dashboard/test-suites', label: 'Test Suites', icon: FolderOpen },
-    { href: '/dashboard/test-cases', label: 'Test Cases', icon: FileText },
+    { href: '/dashboard/testcases', label: 'Test Cases', icon: FileText },
     { href: '/dashboard/test-plans', label: 'Test Plans', icon: ClipboardList },
     { href: '/dashboard/test-runs', label: 'Test Runs', icon: PlayCircle },
     { href: '/dashboard/reports', label: 'Reports', icon: BarChart3 },
