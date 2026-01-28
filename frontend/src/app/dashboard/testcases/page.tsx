@@ -119,7 +119,7 @@ export default function TestCasesPage() {
           </div>
           <NeoButton
             variant="primary"
-            onClick={() => router.push('/dashboard/test-suites')}
+            onClick={() => router.push('/dashboard/testcases/new')}
             className="flex items-center gap-2"
           >
             <Plus className="w-5 h-5" />
