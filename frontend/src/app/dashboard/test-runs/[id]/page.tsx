@@ -68,25 +68,42 @@ export default function TestRunDetailPage() {
 
   useEffect(() => {
     if (runId) {
-      fetchTestRun();
+      // First load - don't preserve drafts
+      fetchTestRun(false);
     }
   }, [runId, resultsPage]);
 
-  const fetchTestRun = async () => {
+  const fetchTestRun = async (preserveDrafts: boolean = false) => {
     try {
       const resultsOffset = (resultsPage - 1) * resultsLimit;
       const data = await api.get(`/testruns/${runId}?page=${resultsPage}&limit=${resultsLimit}&resultsOffset=${resultsOffset}`);
+      
+      console.log('=== Fetching Test Run ===');
+      console.log('Preserve drafts:', preserveDrafts);
+      console.log('Current drafts:', draftResults);
+      
       setTestRun(data);
       
-      const drafts: DraftResults = {};
-      data.results.forEach((result: TestResult) => {
-        drafts[result.id] = {
-          status: result.status,
-          actualResult: result.actualResult || '',
-          notes: result.notes || ''
-        };
+      // Only initialize drafts if not preserving (first load)
+      // Otherwise keep existing draft values
+      setDraftResults(prev => {
+        if (preserveDrafts && Object.keys(prev).length > 0) {
+          console.log('Preserving existing drafts, not overwriting');
+          return prev;
+        }
+        
+        console.log('Initializing fresh drafts from server data');
+        const drafts: DraftResults = {};
+        data.results.forEach((result: TestResult) => {
+          drafts[result.id] = {
+            status: result.status,
+            actualResult: result.actualResult || '',
+            notes: result.notes || ''
+          };
+        });
+        console.log('New drafts:', drafts);
+        return drafts;
       });
-      setDraftResults(drafts);
     } catch (error) {
       toast.error('Failed to fetch test run');
       router.push('/dashboard/test-runs');
@@ -181,11 +198,12 @@ export default function TestRunDetailPage() {
 
   const handleCompleteRun = async () => {
     if (!testRun) return;
-
+    
     try {
       await api.put(`/testruns/${runId}`, { status: 'COMPLETED' });
       toast.success('Test run completed successfully');
-      fetchTestRun();
+      // Fetch with preserveDrafts=true to keep user's saved inputs
+      fetchTestRun(true);
     } catch (error: any) {
       toast.error(error.message || 'Failed to complete test run');
     }
