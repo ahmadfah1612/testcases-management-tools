@@ -6,6 +6,43 @@ const router = Router();
 
 router.use(authMiddleware);
 
+router.get('/:id', async (req: AuthRequest, res) => {
+  try {
+    const { data: schedule, error } = await supabase
+      .from('test_schedules')
+      .select(`
+        *,
+        test_plans (
+          id,
+          name,
+          description
+        )
+      `)
+      .eq('id', req.params.id)
+      .eq('created_by', req.userId!)
+      .single();
+
+    if (error || !schedule) {
+      return res.status(404).json({ error: 'Schedule not found' });
+    }
+
+    const formattedSchedule = {
+      ...schedule,
+      testPlan: schedule.test_plans,
+      testPlanId: schedule.test_plan_id,
+      cronExpression: schedule.cron_expression,
+      createdBy: schedule.created_by,
+      createdAt: schedule.created_at,
+      lastRunAt: schedule.last_run_at,
+      nextRunAt: schedule.next_run_at
+    };
+
+    res.json(formattedSchedule);
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 router.get('/', async (req: AuthRequest, res) => {
   try {
     const { data: schedules, error } = await supabase
