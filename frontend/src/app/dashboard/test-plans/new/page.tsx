@@ -6,7 +6,7 @@ import { api } from '@/lib/api';
 import { NeoCard } from '@/components/neobrutalism/neo-card';
 import { NeoButton } from '@/components/neobrutalism/neo-button';
 import { toast } from 'sonner';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, Save, CheckSquare, Square, FolderOpen } from 'lucide-react';
 
 interface TestCase {
   id: string;
@@ -17,6 +17,13 @@ interface TestCase {
   };
   status: string;
   priority: string;
+}
+
+interface GroupedTestCases {
+  [suiteId: string]: {
+    suiteName: string;
+    testCases: TestCase[];
+  };
 }
 
 export default function NewTestPlanPage() {
@@ -50,6 +57,38 @@ export default function NewTestPlanPage() {
         : [...prev, testCaseId]
     );
   };
+
+  const toggleSuiteSelection = (suiteId: string) => {
+    const suiteTestCases = groupedTestCases[suiteId]?.testCases || [];
+    const allSuiteSelected = suiteTestCases.every(tc => selectedTestCases.includes(tc.id));
+
+    if (allSuiteSelected) {
+      setSelectedTestCases(prev =>
+        prev.filter(id => !suiteTestCases.some(tc => tc.id === id))
+      );
+    } else {
+      setSelectedTestCases(prev => {
+        const newSelected = [...prev];
+        suiteTestCases.forEach(tc => {
+          if (!newSelected.includes(tc.id)) {
+            newSelected.push(tc.id);
+          }
+        });
+        return newSelected;
+      });
+    }
+  };
+
+  const groupedTestCases: GroupedTestCases = testCases.reduce((acc, tc) => {
+    if (!acc[tc.suite.id]) {
+      acc[tc.suite.id] = {
+        suiteName: tc.suite.name,
+        testCases: []
+      };
+    }
+    acc[tc.suite.id].testCases.push(tc);
+    return acc;
+  }, {} as GroupedTestCases);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -145,44 +184,83 @@ export default function NewTestPlanPage() {
                 </NeoButton>
               </div>
             ) : (
-              <div className="space-y-3 max-h-[500px] overflow-y-auto">
-                {testCases.map((testCase) => (
-                  <div
-                    key={testCase.id}
-                    className={`border-2 p-4 cursor-pointer transition-all ${
-                      selectedTestCases.includes(testCase.id)
-                        ? 'border-[rgb(57,255,20)] bg-[rgb(57,255,20)]/10'
-                        : 'border-black bg-white'
-                    }`}
-                    onClick={() => toggleTestCase(testCase.id)}
-                  >
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2 flex-wrap">
-                          <span className="px-2 py-1 text-xs font-bold border-2 border-black uppercase bg-gray-200">
-                            {testCase.status}
-                          </span>
-                          <span className="px-2 py-1 text-xs font-bold border-2 border-black uppercase bg-blue-200">
-                            {testCase.priority}
-                          </span>
+              <div className="space-y-4 max-h-[600px] overflow-y-auto">
+                {Object.entries(groupedTestCases).map(([suiteId, suiteData]) => {
+                  const allSuiteSelected = suiteData.testCases.every(tc => 
+                    selectedTestCases.includes(tc.id)
+                  );
+                  const someSuiteSelected = suiteData.testCases.some(tc => 
+                    selectedTestCases.includes(tc.id)
+                  );
+
+                  return (
+                    <div key={suiteId} className="border-2 border-black bg-white">
+                      <div
+                        className="p-4 cursor-pointer border-b-2 border-black bg-gray-100 hover:bg-gray-200 transition-all flex items-center justify-between gap-4"
+                        onClick={() => toggleSuiteSelection(suiteId)}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="flex-shrink-0">
+                            {allSuiteSelected ? (
+                              <CheckSquare className="w-6 h-6 text-[rgb(57,255,20)]" />
+                            ) : (
+                              <Square className="w-6 h-6" />
+                            )}
+                          </div>
+                          <FolderOpen className="w-6 h-6 text-gray-600" />
+                          <div>
+                            <h3 className="text-xl font-bold uppercase">{suiteData.suiteName}</h3>
+                            <p className="text-sm text-gray-600">
+                              {suiteData.testCases.filter(tc => selectedTestCases.includes(tc.id)).length} / {suiteData.testCases.length} selected
+                            </p>
+                          </div>
                         </div>
-                        <h3 className="text-lg font-bold uppercase">{testCase.title}</h3>
-                        <p className="text-sm text-gray-600 mt-1">
-                          Suite: {testCase.suite.name}
-                        </p>
+                        <div className="px-3 py-1 border-2 border-black font-bold text-sm bg-white">
+                          Select All
+                        </div>
                       </div>
-                      <div className="flex-shrink-0">
-                        <div className={`w-6 h-6 border-2 flex items-center justify-center ${
-                          selectedTestCases.includes(testCase.id)
-                            ? 'border-black bg-[rgb(57,255,20)]'
-                            : 'border-black bg-white'
-                        }`}>
-                          {selectedTestCases.includes(testCase.id) && '✓'}
-                        </div>
+                      <div className="p-4 space-y-3">
+                        {suiteData.testCases.map((testCase) => (
+                          <div
+                            key={testCase.id}
+                            className={`border-2 p-4 cursor-pointer transition-all ${
+                              selectedTestCases.includes(testCase.id)
+                                ? 'border-[rgb(57,255,20)] bg-[rgb(57,255,20)]/10'
+                                : 'border-black bg-white'
+                            }`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleTestCase(testCase.id);
+                            }}
+                          >
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-2 flex-wrap">
+                                  <span className="px-2 py-1 text-xs font-bold border-2 border-black uppercase bg-gray-200">
+                                    {testCase.status}
+                                  </span>
+                                  <span className="px-2 py-1 text-xs font-bold border-2 border-black uppercase bg-blue-200">
+                                    {testCase.priority}
+                                  </span>
+                                </div>
+                                <h3 className="text-lg font-bold uppercase">{testCase.title}</h3>
+                              </div>
+                              <div className="flex-shrink-0">
+                                <div className={`w-6 h-6 border-2 flex items-center justify-center ${
+                                  selectedTestCases.includes(testCase.id)
+                                    ? 'border-black bg-[rgb(57,255,20)]'
+                                    : 'border-black bg-white'
+                                }`}>
+                                  {selectedTestCases.includes(testCase.id) && '✓'}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
