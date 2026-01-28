@@ -6,7 +6,7 @@ import { api } from '@/lib/api';
 import { NeoCard } from '@/components/neobrutalism/neo-card';
 import { NeoButton } from '@/components/neobrutalism/neo-button';
 import { toast } from 'sonner';
-import { ArrowLeft, Save, PlayCircle, Clock, CheckSquare, Square, FolderOpen } from 'lucide-react';
+import { ArrowLeft, Save, PlayCircle, Clock, CheckSquare, Square, FolderOpen, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface TestCase {
   id: string;
@@ -55,13 +55,18 @@ export default function TestPlanDetailPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deleteModal, setDeleteModal] = useState<{ id: string; name: string } | null>(null);
+  const [testCasePage, setTestCasePage] = useState(1);
+  const [totalTestCases, setTotalTestCases] = useState(0);
+  const [totalTestCasesPages, setTotalTestCasesPages] = useState(1);
+  const [fetchingTestCases, setFetchingTestCases] = useState(false);
+  const testCaseLimit = 20;
 
   useEffect(() => {
     if (planId) {
       fetchTestPlan();
       fetchTestCases();
     }
-  }, [planId]);
+  }, [planId, testCasePage]);
 
   const fetchTestPlan = async () => {
     try {
@@ -77,10 +82,15 @@ export default function TestPlanDetailPage() {
 
   const fetchTestCases = async () => {
     try {
-      const data = await api.get('/testcases');
+      setFetchingTestCases(true);
+      const data = await api.get(`/testcases?page=${testCasePage}&limit=${testCaseLimit}`);
       setAllTestCases(data.data || []);
+      setTotalTestCases(data.pagination?.total || 0);
+      setTotalTestCasesPages(data.pagination?.totalPages || 1);
     } catch (error) {
       toast.error('Failed to fetch test cases');
+    } finally {
+      setFetchingTestCases(false);
     }
   };
 
@@ -282,9 +292,9 @@ export default function TestPlanDetailPage() {
 
       <NeoCard className="space-y-4">
         <div>
-          <label className="block font-bold uppercase mb-2">Test Cases ({selectedTestCases.length} selected)</label>
+          <label className="block font-bold uppercase mb-2">Test Cases ({selectedTestCases.length} selected out of {totalTestCases} total)</label>
           
-          {allTestCases.length === 0 ? (
+          {allTestCases.length === 0 && totalTestCases === 0 ? (
             <div className="text-center py-8">
               <p className="text-gray-600 mb-4">No test cases available</p>
               <NeoButton
@@ -295,84 +305,112 @@ export default function TestPlanDetailPage() {
               </NeoButton>
             </div>
           ) : (
-            <div className="space-y-4 max-h-[600px] overflow-y-auto">
-              {Object.entries(groupedTestCases).map(([suiteId, suiteData]) => {
-                const allSuiteSelected = suiteData.testCases.every(tc => 
-                  selectedTestCases.includes(tc.id)
-                );
-                const someSuiteSelected = suiteData.testCases.some(tc => 
-                  selectedTestCases.includes(tc.id)
-                );
+            <>
+              <div className="space-y-4 max-h-[600px] overflow-y-auto">
+                {Object.entries(groupedTestCases).map(([suiteId, suiteData]) => {
+                  const allSuiteSelected = suiteData.testCases.every(tc => 
+                    selectedTestCases.includes(tc.id)
+                  );
+                  const someSuiteSelected = suiteData.testCases.some(tc => 
+                    selectedTestCases.includes(tc.id)
+                  );
 
-                return (
-                  <div key={suiteId} className="border-2 border-black bg-white">
-                    <div
-                      className="p-4 cursor-pointer border-b-2 border-black bg-gray-100 hover:bg-gray-200 transition-all flex items-center justify-between gap-4"
-                      onClick={() => toggleSuiteSelection(suiteId)}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="flex-shrink-0">
-                          {allSuiteSelected ? (
-                            <CheckSquare className="w-6 h-6 text-[rgb(57,255,20)]" />
-                          ) : (
-                            <Square className="w-6 h-6" />
-                          )}
+                  return (
+                    <div key={suiteId} className="border-2 border-black bg-white">
+                      <div
+                        className="p-4 cursor-pointer border-b-2 border-black bg-gray-100 hover:bg-gray-200 transition-all flex items-center justify-between gap-4"
+                        onClick={() => toggleSuiteSelection(suiteId)}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="flex-shrink-0">
+                            {allSuiteSelected ? (
+                              <CheckSquare className="w-6 h-6 text-[rgb(57,255,20)]" />
+                            ) : (
+                              <Square className="w-6 h-6" />
+                            )}
+                          </div>
+                          <FolderOpen className="w-6 h-6 text-gray-600" />
+                          <div>
+                            <h3 className="text-xl font-bold uppercase">{suiteData.suiteName}</h3>
+                            <p className="text-sm text-gray-600">
+                              {suiteData.testCases.filter(tc => selectedTestCases.includes(tc.id)).length} / {suiteData.testCases.length} selected
+                            </p>
+                          </div>
                         </div>
-                        <FolderOpen className="w-6 h-6 text-gray-600" />
-                        <div>
-                          <h3 className="text-xl font-bold uppercase">{suiteData.suiteName}</h3>
-                          <p className="text-sm text-gray-600">
-                            {suiteData.testCases.filter(tc => selectedTestCases.includes(tc.id)).length} / {suiteData.testCases.length} selected
-                          </p>
+                        <div className="px-3 py-1 border-2 border-black font-bold text-sm bg-white">
+                          Select All
                         </div>
                       </div>
-                      <div className="px-3 py-1 border-2 border-black font-bold text-sm bg-white">
-                        Select All
-                      </div>
-                    </div>
-                    <div className="p-4 space-y-3">
-                      {suiteData.testCases.map((testCase) => (
-                        <div
-                          key={testCase.id}
-                          className={`border-2 p-4 cursor-pointer transition-all ${
-                            selectedTestCases.includes(testCase.id)
-                              ? 'border-[rgb(57,255,20)] bg-[rgb(57,255,20)]/10'
-                              : 'border-black bg-white'
-                          }`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleTestCase(testCase.id);
-                          }}
-                        >
-                          <div className="flex items-start justify-between gap-4">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-2 flex-wrap">
-                                <span className="px-2 py-1 text-xs font-bold border-2 border-black uppercase bg-gray-200">
-                                  {testCase.status}
-                                </span>
-                                <span className="px-2 py-1 text-xs font-bold border-2 border-black uppercase bg-blue-200">
-                                  {testCase.priority}
-                                </span>
+                      <div className="p-4 space-y-3">
+                        {suiteData.testCases.map((testCase) => (
+                          <div
+                            key={testCase.id}
+                            className={`border-2 p-4 cursor-pointer transition-all ${
+                              selectedTestCases.includes(testCase.id)
+                                ? 'border-[rgb(57,255,20)] bg-[rgb(57,255,20)]/10'
+                                : 'border-black bg-white'
+                            }`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleTestCase(testCase.id);
+                            }}
+                          >
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-2 flex-wrap">
+                                  <span className="px-2 py-1 text-xs font-bold border-2 border-black uppercase bg-gray-200">
+                                    {testCase.status}
+                                  </span>
+                                  <span className="px-2 py-1 text-xs font-bold border-2 border-black uppercase bg-blue-200">
+                                    {testCase.priority}
+                                  </span>
+                                </div>
+                                <h3 className="text-lg font-bold uppercase">{testCase.title}</h3>
                               </div>
-                              <h3 className="text-lg font-bold uppercase">{testCase.title}</h3>
-                            </div>
-                            <div className="flex-shrink-0">
-                              <div className={`w-6 h-6 border-2 flex items-center justify-center ${
-                                selectedTestCases.includes(testCase.id)
-                                  ? 'border-black bg-[rgb(57,255,20)]'
-                                  : 'border-black bg-white'
-                              }`}>
-                                {selectedTestCases.includes(testCase.id) && '✓'}
+                              <div className="flex-shrink-0">
+                                <div className={`w-6 h-6 border-2 flex items-center justify-center ${
+                                  selectedTestCases.includes(testCase.id)
+                                    ? 'border-black bg-[rgb(57,255,20)]'
+                                    : 'border-black bg-white'
+                                }`}>
+                                  {selectedTestCases.includes(testCase.id) && '✓'}
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+
+              {!fetchingTestCases && totalTestCasesPages > 1 && (
+                <div className="flex items-center justify-center gap-4 pt-4 border-t-2 border-black mt-4">
+                  <NeoButton
+                    variant="secondary"
+                    onClick={() => setTestCasePage(p => Math.max(1, p - 1))}
+                    disabled={testCasePage === 1}
+                    className="flex items-center gap-2"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                    Previous
+                  </NeoButton>
+                  <span className="font-bold uppercase">
+                    Page {testCasePage} of {totalTestCasesPages}
+                  </span>
+                  <NeoButton
+                    variant="secondary"
+                    onClick={() => setTestCasePage(p => Math.min(totalTestCasesPages, p + 1))}
+                    disabled={testCasePage === totalTestCasesPages}
+                    className="flex items-center gap-2"
+                  >
+                    Next
+                    <ChevronRight className="w-4 h-4" />
+                  </NeoButton>
+                </div>
+              )}
+            </>
           )}
         </div>
       </NeoCard>
