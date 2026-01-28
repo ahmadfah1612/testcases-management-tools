@@ -18,7 +18,7 @@ router.get('/', async (req: AuthRequest, res) => {
           description
         )
       `)
-      .eq('started_by', req.userId!)
+      .eq('started_by', req.dbUserId!)
       .order('started_at', { ascending: false });
 
     if (error) {
@@ -127,7 +127,7 @@ router.post('/', async (req: AuthRequest, res) => {
       .insert({
         test_plan_id: testPlanId,
         name,
-        started_by: req.userId!
+        started_by: req.dbUserId!
       })
       .select()
       .single();
@@ -142,7 +142,7 @@ router.post('/', async (req: AuthRequest, res) => {
         test_run_id: testRun.id,
         test_case_id: testCaseId,
         status: 'SKIP',
-        created_by: req.userId!
+        created_by: req.dbUserId!
       }));
 
       await supabase.from('test_results').insert(results);

@@ -8,11 +8,16 @@ router.use(authMiddleware);
 
 router.get('/', async (req: AuthRequest, res) => {
   try {
-    const { data: testPlans, error } = await supabase
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const offset = (page - 1) * limit;
+
+    const { data: testPlans, error, count } = await supabase
       .from('test_plans')
-      .select('*')
-      .eq('created_by', req.userId!)
-      .order('created_at', { ascending: false });
+      .select('*', { count: 'exact' })
+      .eq('created_by', req.dbUserId!)
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
 
     if (error) {
       return res.status(500).json({ error: 'Failed to fetch test plans' });
@@ -36,7 +41,15 @@ router.get('/', async (req: AuthRequest, res) => {
       })
     );
 
-    res.json(formattedPlans);
+    res.json({
+      data: formattedPlans,
+      pagination: {
+        page,
+        limit,
+        total: count || 0,
+        totalPages: Math.ceil((count || 0) / limit)
+      }
+    });
   } catch (error) {
     res.status(500).json({ error: 'Internal server error' });
   }
@@ -112,7 +125,7 @@ router.post('/', async (req: AuthRequest, res) => {
         name,
         description,
         test_case_ids: testCaseIds || [],
-        created_by: req.userId!
+        created_by: req.dbUserId!
       })
       .select()
       .single();
@@ -148,6 +161,16 @@ router.put('/:id', async (req: AuthRequest, res) => {
   try {
     const { name, description, testCaseIds } = req.body;
     
+    const { data: existingPlan, error: fetchError } = await supabase
+      .from('test_plans')
+      .select('*')
+      .eq('id', req.params.id)
+      .single();
+
+    if (fetchError || !existingPlan) {
+      return res.status(404).json({ error: 'Test plan not found' });
+    }
+
     const { data: testPlan, error: updateError } = await supabase
       .from('test_plans')
       .update({

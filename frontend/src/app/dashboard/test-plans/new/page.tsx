@@ -1,0 +1,213 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useRouter, useParams } from 'next/navigation';
+import { api } from '@/lib/api';
+import { NeoCard } from '@/components/neobrutalism/neo-card';
+import { NeoButton } from '@/components/neobrutalism/neo-button';
+import { toast } from 'sonner';
+import { ArrowLeft, Save } from 'lucide-react';
+
+interface TestCase {
+  id: string;
+  title: string;
+  suite: {
+    id: string;
+    name: string;
+  };
+  status: string;
+  priority: string;
+}
+
+export default function NewTestPlanPage() {
+  const router = useRouter();
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [testCases, setTestCases] = useState<TestCase[]>([]);
+  const [selectedTestCases, setSelectedTestCases] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [fetchingTestCases, setFetchingTestCases] = useState(true);
+
+  useEffect(() => {
+    fetchTestCases();
+  }, []);
+
+  const fetchTestCases = async () => {
+    try {
+      const data = await api.get('/testcases');
+      setTestCases(data.data || []);
+    } catch (error) {
+      toast.error('Failed to fetch test cases');
+    } finally {
+      setFetchingTestCases(false);
+    }
+  };
+
+  const toggleTestCase = (testCaseId: string) => {
+    setSelectedTestCases(prev =>
+      prev.includes(testCaseId)
+        ? prev.filter(id => id !== testCaseId)
+        : [...prev, testCaseId]
+    );
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!name.trim()) {
+      toast.error('Please enter a test plan name');
+      return;
+    }
+
+    if (selectedTestCases.length === 0) {
+      toast.error('Please select at least one test case');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await api.post('/testplans', {
+        name,
+        description,
+        testCaseIds: selectedTestCases
+      });
+      toast.success('Test plan created successfully');
+      router.push('/dashboard/test-plans');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to create test plan');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-4">
+        <NeoButton
+          variant="secondary"
+          onClick={() => router.push('/dashboard/test-plans')}
+          className="flex items-center gap-2"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back
+        </NeoButton>
+        <div>
+          <h1 className="text-4xl font-bold uppercase">New Test Plan</h1>
+          <p className="text-gray-600">Create a new test execution plan</p>
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <NeoCard className="space-y-4">
+          <div>
+            <label className="block font-bold uppercase mb-2">Plan Name *</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full p-3 border-2 border-black bg-white font-bold uppercase focus:outline-none focus:ring-2 focus:ring-black"
+              placeholder="Enter test plan name"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block font-bold uppercase mb-2">Description</label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="w-full p-3 border-2 border-black bg-white focus:outline-none focus:ring-2 focus:ring-black min-h-[120px]"
+              placeholder="Enter test plan description"
+              rows={4}
+            />
+          </div>
+        </NeoCard>
+
+        <NeoCard className="space-y-4">
+          <div>
+            <label className="block font-bold uppercase mb-2">Select Test Cases *</label>
+            <p className="text-sm text-gray-600 mb-4">
+              Choose test cases to include in this plan ({selectedTestCases.length} selected)
+            </p>
+
+            {fetchingTestCases ? (
+              <div className="text-center py-8">
+                <div className="text-lg font-bold uppercase">Loading test cases...</div>
+              </div>
+            ) : testCases.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-gray-600 mb-4">No test cases available</p>
+                <NeoButton
+                  variant="secondary"
+                  onClick={() => router.push('/dashboard/test-suites')}
+                >
+                  Create Test Cases
+                </NeoButton>
+              </div>
+            ) : (
+              <div className="space-y-3 max-h-[500px] overflow-y-auto">
+                {testCases.map((testCase) => (
+                  <div
+                    key={testCase.id}
+                    className={`border-2 p-4 cursor-pointer transition-all ${
+                      selectedTestCases.includes(testCase.id)
+                        ? 'border-[rgb(57,255,20)] bg-[rgb(57,255,20)]/10'
+                        : 'border-black bg-white'
+                    }`}
+                    onClick={() => toggleTestCase(testCase.id)}
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2 flex-wrap">
+                          <span className="px-2 py-1 text-xs font-bold border-2 border-black uppercase bg-gray-200">
+                            {testCase.status}
+                          </span>
+                          <span className="px-2 py-1 text-xs font-bold border-2 border-black uppercase bg-blue-200">
+                            {testCase.priority}
+                          </span>
+                        </div>
+                        <h3 className="text-lg font-bold uppercase">{testCase.title}</h3>
+                        <p className="text-sm text-gray-600 mt-1">
+                          Suite: {testCase.suite.name}
+                        </p>
+                      </div>
+                      <div className="flex-shrink-0">
+                        <div className={`w-6 h-6 border-2 flex items-center justify-center ${
+                          selectedTestCases.includes(testCase.id)
+                            ? 'border-black bg-[rgb(57,255,20)]'
+                            : 'border-black bg-white'
+                        }`}>
+                          {selectedTestCases.includes(testCase.id) && '✓'}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </NeoCard>
+
+        <div className="flex justify-end gap-4">
+          <NeoButton
+            variant="secondary"
+            type="button"
+            onClick={() => router.push('/dashboard/test-plans')}
+            className="flex items-center gap-2"
+          >
+            Cancel
+          </NeoButton>
+          <NeoButton
+            variant="primary"
+            type="submit"
+            disabled={loading || selectedTestCases.length === 0}
+            className="flex items-center gap-2"
+          >
+            <Save className="w-4 h-4" />
+            {loading ? 'Creating...' : 'Create Test Plan'}
+          </NeoButton>
+        </div>
+      </form>
+    </div>
+  );
+}
