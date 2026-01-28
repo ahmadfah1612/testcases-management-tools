@@ -80,7 +80,18 @@ export default function TestRunDetailPage() {
       
       console.log('=== Fetching Test Run ===');
       console.log('Preserve drafts:', preserveDrafts);
+      console.log('Server data received:', data);
       console.log('Current drafts:', draftResults);
+      console.log('Number of results from server:', data.results.length);
+      
+      // Log each result's data from server
+      data.results.forEach((result: TestResult) => {
+        console.log(`Server result ${result.id}:`, {
+          status: result.status,
+          actualResult: result.actualResult,
+          notes: result.notes
+        });
+      });
       
       setTestRun(data);
       
@@ -89,12 +100,16 @@ export default function TestRunDetailPage() {
       setDraftResults(prev => {
         if (preserveDrafts && Object.keys(prev).length > 0) {
           console.log('Preserving existing drafts, not overwriting');
+          console.log('Drafts being preserved:', prev);
           return prev;
         }
         
         console.log('Initializing fresh drafts from server data');
         const drafts: DraftResults = {};
         data.results.forEach((result: TestResult) => {
+          const hasData = result.actualResult || result.notes;
+          console.log(`Result ${result.id}: hasData=${hasData}, actualResult="${result.actualResult}", notes="${result.notes}"`);
+          
           drafts[result.id] = {
             status: result.status,
             actualResult: result.actualResult || '',
@@ -391,13 +406,16 @@ export default function TestRunDetailPage() {
                     <label className="block font-bold uppercase mb-2 text-sm">Actual Result</label>
                     <textarea
                       value={draftResults[result.id]?.actualResult ?? ''}
-                      onChange={(e) => handleDraftChange(result.id, 'actualResult', e.target.value)}
+                      onChange={(e) => {
+                        console.log('Actual Result onChange:', e.target.value);
+                        handleDraftChange(result.id, 'actualResult', e.target.value);
+                      }}
                       placeholder="Enter actual result"
                       className="w-full p-3 border-2 border-black bg-white focus:outline-none focus:ring-2 focus:ring-black min-h-[100px] font-normal text-base"
                       rows={4}
                     />
                     <div className="text-xs text-gray-500 mt-1">
-                      Debug: {draftResults[result.id]?.actualResult || 'EMPTY'}
+                      Debug: "{draftResults[result.id]?.actualResult ?? 'EMPTY'}"
                     </div>
                   </div>
 
@@ -405,13 +423,16 @@ export default function TestRunDetailPage() {
                     <label className="block font-bold uppercase mb-2 text-sm">Notes</label>
                     <textarea
                       value={draftResults[result.id]?.notes ?? ''}
-                      onChange={(e) => handleDraftChange(result.id, 'notes', e.target.value)}
+                      onChange={(e) => {
+                        console.log('Notes onChange:', e.target.value);
+                        handleDraftChange(result.id, 'notes', e.target.value);
+                      }}
                       placeholder="Add notes about this test result"
                       className="w-full p-3 border-2 border-black bg-white focus:outline-none focus:ring-2 focus:ring-black min-h-[80px] font-normal text-base"
                       rows={3}
                     />
                     <div className="text-xs text-gray-500 mt-1">
-                      Debug: {draftResults[result.id]?.notes || 'EMPTY'}
+                      Debug: "{draftResults[result.id]?.notes ?? 'EMPTY'}"
                     </div>
                   </div>
 
