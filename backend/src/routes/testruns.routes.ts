@@ -136,8 +136,19 @@ router.post('/', async (req: AuthRequest, res) => {
       return res.status(500).json({ error: 'Failed to create test run' });
     }
     
-    const testCaseIds = testPlan.test_case_ids;
-    if (testCaseIds && testCaseIds.length > 0) {
+    let testCaseIds = testPlan.test_case_ids;
+    
+    // Parse testCaseIds if it's a string (JSON format)
+    if (typeof testCaseIds === 'string') {
+      try {
+        testCaseIds = JSON.parse(testCaseIds);
+      } catch (e) {
+        console.error('Failed to parse test_case_ids:', e);
+        testCaseIds = [];
+      }
+    }
+    
+    if (testCaseIds && Array.isArray(testCaseIds) && testCaseIds.length > 0) {
       const results = testCaseIds.map((testCaseId: string) => ({
         test_run_id: testRun.id,
         test_case_id: testCaseId,
@@ -145,7 +156,11 @@ router.post('/', async (req: AuthRequest, res) => {
         created_by: req.dbUserId!
       }));
 
-      await supabase.from('test_results').insert(results);
+      const { error: resultsError } = await supabase.from('test_results').insert(results);
+      if (resultsError) {
+        console.error('Error inserting test results:', resultsError);
+        return res.status(500).json({ error: 'Failed to create test results' });
+      }
     }
     
     const formattedRun = {
