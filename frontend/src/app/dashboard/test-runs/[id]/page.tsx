@@ -270,6 +270,11 @@ export default function TestRunDetailPage() {
   const passed = testRun.results.filter(r => r.status === 'PASS').length;
   const failed = testRun.results.filter(r => r.status === 'FAIL').length;
   const skipped = testRun.results.filter(r => r.status === 'SKIP').length;
+  const total = passed + failed + skipped;
+  
+  const passedPercent = total > 0 ? Math.round((passed / total) * 100) : 0;
+  const failedPercent = total > 0 ? Math.round((failed / total) * 100) : 0;
+  const skippedPercent = total > 0 ? Math.round((skipped / total) * 100) : 0;
 
   return (
     <div className="space-y-6">
@@ -302,7 +307,7 @@ export default function TestRunDetailPage() {
 
       <NeoCard>
         <h2 className="text-2xl font-bold uppercase mb-4">Run Statistics</h2>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="border-2 border-black bg-white p-4">
             <div className="text-sm text-gray-600 uppercase">Total</div>
             <div className="text-3xl font-bold">{testRun.resultsCount}</div>
@@ -310,16 +315,85 @@ export default function TestRunDetailPage() {
           <div className="border-2 border-black bg-[rgb(57,255,20)]/20 p-4">
             <div className="text-sm text-gray-600 uppercase">Passed</div>
             <div className="text-3xl font-bold text-[rgb(57,255,20)]">{passed}</div>
+            <div className="text-sm font-bold text-[rgb(57,255,20)]">{passedPercent}%</div>
           </div>
           <div className="border-2 border-black bg-[rgb(239,68,68)]/20 p-4">
             <div className="text-sm text-gray-600 uppercase">Failed</div>
             <div className="text-3xl font-bold text-[rgb(239,68,68)]">{failed}</div>
+            <div className="text-sm font-bold text-[rgb(239,68,68)]">{failedPercent}%</div>
           </div>
           <div className="border-2 border-black bg-gray-200 p-4">
             <div className="text-sm text-gray-600 uppercase">Skipped</div>
             <div className="text-3xl font-bold">{skipped}</div>
+            <div className="text-sm font-bold">{skippedPercent}%</div>
           </div>
         </div>
+
+        {total > 0 && (
+          <div className="mt-6">
+            <h3 className="text-lg font-bold uppercase mb-4">Test Results Distribution</h3>
+            <div className="flex items-center justify-center gap-8">
+              <div className="relative">
+                <svg width="200" height="200" viewBox="0 0 200 200">
+                  <circle
+                    cx="100"
+                    cy="100"
+                    r="80"
+                    fill="transparent"
+                    stroke="black"
+                    strokeWidth="2"
+                  />
+                  <circle
+                    cx="100"
+                    cy="100"
+                    r="80"
+                    fill="transparent"
+                    stroke="rgb(57,255,20)"
+                    strokeWidth="40"
+                    strokeDasharray={`${passedPercent * 5.02} 500`}
+                    transform="rotate(-90 100 100)"
+                  />
+                  <circle
+                    cx="100"
+                    cy="100"
+                    r="80"
+                    fill="transparent"
+                    stroke="rgb(239,68,68)"
+                    strokeWidth="40"
+                    strokeDasharray={`${failedPercent * 5.02} 500`}
+                    strokeDashoffset={`-${passedPercent * 5.02}`}
+                    transform="rotate(-90 100 100)"
+                  />
+                  <circle
+                    cx="100"
+                    cy="100"
+                    r="80"
+                    fill="transparent"
+                    stroke="rgb(156,163,175)"
+                    strokeWidth="40"
+                    strokeDasharray={`${skippedPercent * 5.02} 500`}
+                    strokeDashoffset={`-${(passedPercent + failedPercent) * 5.02}`}
+                    transform="rotate(-90 100 100)"
+                  />
+                </svg>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center gap-3">
+                  <div className="w-4 h-4 bg-[rgb(57,255,20)] border-2 border-black"></div>
+                  <span className="font-bold uppercase">Passed ({passedPercent}%)</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-4 h-4 bg-[rgb(239,68,68)] border-2 border-black"></div>
+                  <span className="font-bold uppercase">Failed ({failedPercent}%)</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-4 h-4 bg-gray-300 border-2 border-black"></div>
+                  <span className="font-bold uppercase">Skipped ({skippedPercent}%)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </NeoCard>
 
       <div className="space-y-4">
