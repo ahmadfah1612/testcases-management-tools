@@ -1,8 +1,9 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from './supabase';
+import { toast } from 'sonner';
 
 interface User {
   id: string;
@@ -27,6 +28,57 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const warningTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const lastActivityRef = useRef<number>(Date.now());
+  
+  const inactivityTimeoutHours = parseInt(
+    process.env.NEXT_PUBLIC_INACTIVITY_TIMEOUT_HOURS || '2'
+  );
+  const inactivityTimeoutMs = inactivityTimeoutHours * 60 * 60 * 1000;
+  const warningTimeoutMs = Math.min(5 * 60 * 1000, inactivityTimeoutMs - 60 * 1000);
+
+  const resetInactivityTimer = () => {
+    lastActivityRef.current = Date.now();
+    
+    if (inactivityTimerRef.current) {
+      clearTimeout(inactivityTimerRef.current);
+    }
+    if (warningTimerRef.current) {
+      clearTimeout(warningTimerRef.current);
+    }
+
+    warningTimerRef.current = setTimeout(() => {
+      if (user) {
+        toast.warning(
+          `You will be logged out in ${Math.round((inactivityTimeoutMs - warningTimeoutMs) / 60000)} minutes due to inactivity`,
+          { duration: 60000 }
+        );
+      }
+    }, warningTimeoutMs);
+
+    inactivityTimerRef.current = setTimeout(() => {
+      if (user) {
+        toast.error('You have been logged out due to inactivity');
+        logout();
+      }
+    }, inactivityTimeoutMs);
+  };
+
+  useEffect(() => {
+    const handleActivity = () => {
+      resetInactivityTimer();
+    };
+
+    const events = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'];
+    events.forEach(event => window.addEventListener(event, handleActivity));
+
+    return () => {
+      events.forEach(event => window.removeEventListener(event, handleActivity));
+      if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current);
+      if (warningTimerRef.current) clearTimeout(warningTimerRef.current);
+    };
+  }, [user]);
 
   useEffect(() => {
     checkUser();
@@ -34,8 +86,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
         await fetchUser(session.user.id);
+        resetInactivityTimer();
       } else {
         setUser(null);
+        if (inactivityTimerRef.current) {
+          clearTimeout(inactivityTimerRef.current);
+        }
+        if (warningTimerRef.current) {
+          clearTimeout(warningTimerRef.current);
+        }
       }
       setLoading(false);
     });
