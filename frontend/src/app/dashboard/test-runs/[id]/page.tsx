@@ -32,7 +32,6 @@ interface TestResult {
 interface DraftResults {
   [resultId: string]: {
     status: string;
-    actualResult: string;
     notes: string;
   };
 }
@@ -68,7 +67,6 @@ export default function TestRunDetailPage() {
 
   useEffect(() => {
     if (runId) {
-      // First load - don't preserve drafts
       fetchTestRun(false);
     }
   }, [runId, resultsPage]);
@@ -84,19 +82,8 @@ export default function TestRunDetailPage() {
       console.log('Current drafts:', draftResults);
       console.log('Number of results from server:', data.results.length);
       
-      // Log each result's data from server
-      data.results.forEach((result: TestResult) => {
-        console.log(`Server result ${result.id}:`, {
-          status: result.status,
-          actualResult: result.actualResult,
-          notes: result.notes
-        });
-      });
-      
       setTestRun(data);
       
-      // Only initialize drafts if not preserving (first load)
-      // Otherwise keep existing draft values
       setDraftResults(prev => {
         if (preserveDrafts && Object.keys(prev).length > 0) {
           console.log('Preserving existing drafts, not overwriting');
@@ -107,12 +94,8 @@ export default function TestRunDetailPage() {
         console.log('Initializing fresh drafts from server data');
         const drafts: DraftResults = {};
         data.results.forEach((result: TestResult) => {
-          const hasData = result.actualResult || result.notes;
-          console.log(`Result ${result.id}: hasData=${hasData}, actualResult="${result.actualResult}", notes="${result.notes}"`);
-          
           drafts[result.id] = {
             status: result.status,
-            actualResult: result.actualResult || '',
             notes: result.notes || ''
           };
         });
@@ -128,7 +111,7 @@ export default function TestRunDetailPage() {
     }
   };
 
-  const handleDraftChange = (resultId: string, field: 'status' | 'actualResult' | 'notes', value: string) => {
+  const handleDraftChange = (resultId: string, field: 'status' | 'notes', value: string) => {
     console.log(`=== Draft Change ===`);
     console.log(`Result ID: ${resultId}`);
     console.log(`Field: ${field}`);
@@ -137,7 +120,6 @@ export default function TestRunDetailPage() {
     setDraftResults(prev => {
       const currentDraft = prev[resultId] || {
         status: '',
-        actualResult: '',
         notes: ''
       };
       const newDraft = {
@@ -170,7 +152,6 @@ export default function TestRunDetailPage() {
       const response = await api.post(`/testruns/${runId}/results`, {
         testCaseId: result.testCaseId,
         status: draft.status,
-        actualResult: draft.actualResult,
         notes: draft.notes
       });
       console.log('Save response:', response);
@@ -178,24 +159,20 @@ export default function TestRunDetailPage() {
       if (response.data) {
         console.log('Updated result from server:', response.data);
         
-        // Update draft with actual saved data from server
         setDraftResults(prev => ({
           ...prev,
           [result.id]: {
             status: response.data.status || draft.status,
-            actualResult: response.data.actual_result || draft.actualResult,
             notes: response.data.notes || draft.notes
           }
         }));
         
-        // Update test run result
         setTestRun(prev => prev ? {
           ...prev,
           results: prev.results.map(r => 
             r.id === result.id ? {
               ...r,
               status: response.data.status || draft.status,
-              actualResult: response.data.actual_result || draft.actualResult,
               notes: response.data.notes || draft.notes
             } : r
           )
@@ -217,7 +194,6 @@ export default function TestRunDetailPage() {
     try {
       await api.put(`/testruns/${runId}`, { status: 'COMPLETED' });
       toast.success('Test run completed successfully');
-      // Fetch with preserveDrafts=true to keep user's saved inputs
       fetchTestRun(true);
     } catch (error: any) {
       toast.error(error.message || 'Failed to complete test run');
@@ -399,23 +375,6 @@ export default function TestRunDetailPage() {
                           {status}
                         </NeoButton>
                       ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block font-bold uppercase mb-2 text-sm">Actual Result</label>
-                    <textarea
-                      value={draftResults[result.id]?.actualResult ?? ''}
-                      onChange={(e) => {
-                        console.log('Actual Result onChange:', e.target.value);
-                        handleDraftChange(result.id, 'actualResult', e.target.value);
-                      }}
-                      placeholder="Enter actual result"
-                      className="w-full p-3 border-2 border-black bg-white focus:outline-none focus:ring-2 focus:ring-black min-h-[100px] font-normal text-base"
-                      rows={4}
-                    />
-                    <div className="text-xs text-gray-500 mt-1">
-                      Debug: "{draftResults[result.id]?.actualResult ?? 'EMPTY'}"
                     </div>
                   </div>
 
