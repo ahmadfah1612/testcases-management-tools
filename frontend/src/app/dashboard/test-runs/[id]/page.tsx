@@ -97,18 +97,26 @@ export default function TestRunDetailPage() {
   };
 
   const handleDraftChange = (resultId: string, field: 'status' | 'actualResult' | 'notes', value: string) => {
+    console.log(`=== Draft Change ===`);
+    console.log(`Result ID: ${resultId}`);
+    console.log(`Field: ${field}`);
+    console.log(`Value: ${value}`);
+    
     setDraftResults(prev => {
       const currentDraft = prev[resultId] || {
         status: '',
         actualResult: '',
         notes: ''
       };
+      const newDraft = {
+        ...currentDraft,
+        [field]: value
+      };
+      console.log('New draft object:', newDraft);
+      
       return {
         ...prev,
-        [resultId]: {
-          ...currentDraft,
-          [field]: value
-        }
+        [resultId]: newDraft
       };
     });
   };
@@ -134,25 +142,35 @@ export default function TestRunDetailPage() {
         notes: draft.notes
       });
       console.log('Save response:', response);
+      
+      if (response.data) {
+        console.log('Updated result from server:', response.data);
+        
+        // Update draft with actual saved data from server
+        setDraftResults(prev => ({
+          ...prev,
+          [result.id]: {
+            status: response.data.status || draft.status,
+            actualResult: response.data.actual_result || draft.actualResult,
+            notes: response.data.notes || draft.notes
+          }
+        }));
+        
+        // Update test run result
+        setTestRun(prev => prev ? {
+          ...prev,
+          results: prev.results.map(r => 
+            r.id === result.id ? {
+              ...r,
+              status: response.data.status || draft.status,
+              actualResult: response.data.actual_result || draft.actualResult,
+              notes: response.data.notes || draft.notes
+            } : r
+          )
+        } : null);
+      }
+      
       toast.success('Test result saved successfully');
-      
-      // Only reload if successful - don't reset the draft that was just saved
-      // Actually, let's NOT reload to preserve what user just typed
-      // Just update the result data locally
-      // fetchTestRun();
-      
-      // Instead, update the test run result locally to show saved status
-      setTestRun(prev => prev ? {
-        ...prev,
-        results: prev.results.map(r => 
-          r.id === result.id ? {
-            ...r,
-            status: draft.status,
-            actualResult: draft.actualResult,
-            notes: draft.notes
-          } : r
-        )
-      } : null);
     } catch (error: any) {
       console.error('Save error:', error);
       toast.error(error.message || 'Failed to save test result');
@@ -354,23 +372,29 @@ export default function TestRunDetailPage() {
                   <div>
                     <label className="block font-bold uppercase mb-2 text-sm">Actual Result</label>
                     <textarea
-                      value={draftResults[result.id]?.actualResult || ''}
+                      value={draftResults[result.id]?.actualResult ?? ''}
                       onChange={(e) => handleDraftChange(result.id, 'actualResult', e.target.value)}
                       placeholder="Enter actual result"
                       className="w-full p-3 border-2 border-black bg-white focus:outline-none focus:ring-2 focus:ring-black min-h-[100px] font-normal text-base"
                       rows={4}
                     />
+                    <div className="text-xs text-gray-500 mt-1">
+                      Debug: {draftResults[result.id]?.actualResult || 'EMPTY'}
+                    </div>
                   </div>
 
                   <div>
                     <label className="block font-bold uppercase mb-2 text-sm">Notes</label>
                     <textarea
-                      value={draftResults[result.id]?.notes || ''}
+                      value={draftResults[result.id]?.notes ?? ''}
                       onChange={(e) => handleDraftChange(result.id, 'notes', e.target.value)}
                       placeholder="Add notes about this test result"
                       className="w-full p-3 border-2 border-black bg-white focus:outline-none focus:ring-2 focus:ring-black min-h-[80px] font-normal text-base"
                       rows={3}
                     />
+                    <div className="text-xs text-gray-500 mt-1">
+                      Debug: {draftResults[result.id]?.notes || 'EMPTY'}
+                    </div>
                   </div>
 
                   <div className="flex justify-end">
