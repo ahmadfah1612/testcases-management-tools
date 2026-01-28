@@ -3,12 +3,25 @@
 import { useRouter } from 'next/navigation';
 import { NeoButton } from '@/components/neobrutalism/neo-button';
 import { AlertCircle } from 'lucide-react';
+import { useEffect } from 'react';
 
 export default function NotFound() {
   const router = useRouter();
 
+  useEffect(() => {
+    const previousUrl = sessionStorage.getItem('previousUrl');
+    if (previousUrl && previousUrl !== '/') {
+      sessionStorage.setItem('notFoundPreviousUrl', previousUrl);
+    }
+  }, []);
+
   const handleGoBack = () => {
-    router.back();
+    const previousUrl = sessionStorage.getItem('notFoundPreviousUrl');
+    if (previousUrl && previousUrl !== '/') {
+      router.push(previousUrl);
+    } else {
+      router.push('/dashboard');
+    }
   };
 
   const handleGoHome = () => {
