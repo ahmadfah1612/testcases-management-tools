@@ -8,11 +8,15 @@ export default function NotFound() {
   const router = useRouter();
 
   const handleGoBack = () => {
-    router.back();
+    if (typeof window !== 'undefined') {
+      window.history.back();
+    }
   };
 
   const handleGoHome = () => {
-    router.push('/dashboard');
+    if (typeof window !== 'undefined') {
+      window.location.href = '/dashboard';
+    }
   };
 
   return (

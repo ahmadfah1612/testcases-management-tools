@@ -1,7 +1,7 @@
 'use client';
 
 import { useAuth } from '@/lib/auth-context';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { NeoButton } from '@/components/neobrutalism/neo-button';
 import { 
@@ -26,28 +26,29 @@ export default function DashboardLayout({
   const { user, logout, isAdmin, loading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!loading && !user && !isRedirecting) {
+      setIsRedirecting(true);
       router.push('/login');
+    } else if (!loading && user && isRedirecting) {
+      setIsRedirecting(false);
     }
-  }, [user, loading, router]);
+  }, [user, loading, router, isRedirecting]);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-2xl font-bold uppercase">Loading...</div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return null;
-  }
-
-  const handleLogout = () => {
-    logout();
-    router.push('/login');
+  const handleLogout = async () => {
+    try {
+      await logout();
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login';
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login';
+      }
+    }
   };
 
   const navigation = [
@@ -103,7 +104,7 @@ export default function DashboardLayout({
           </nav>
         </aside>
 
-        <main className="flex-1">{children}</main>
+        <main className="flex-1" key={pathname}>{children}</main>
       </div>
     </div>
   );

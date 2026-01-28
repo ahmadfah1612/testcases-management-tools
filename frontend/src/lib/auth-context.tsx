@@ -60,11 +60,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .eq('auth_id', authId)
         .single();
 
-      if (userData) {
+      if (error) {
+        console.error('Error fetching user:', error);
+        setUser(null);
+      } else if (userData) {
         setUser(userData);
+      } else {
+        setUser(null);
       }
     } catch (error) {
       console.error('Error fetching user:', error);
+      setUser(null);
     } finally {
       setLoading(false);
     }
@@ -140,7 +146,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     await supabase.auth.signOut();
     setUser(null);
-    router.push('/login');
+    if (typeof window !== 'undefined') {
+      window.location.href = '/login';
+    }
   };
 
   const isAdmin = () => {
