@@ -76,22 +76,13 @@ export default function TestRunDetailPage() {
       const resultsOffset = (resultsPage - 1) * resultsLimit;
       const data = await api.get(`/testruns/${runId}?page=${resultsPage}&limit=${resultsLimit}&resultsOffset=${resultsOffset}`);
       
-      console.log('=== Fetching Test Run ===');
-      console.log('Preserve drafts:', preserveDrafts);
-      console.log('Server data received:', data);
-      console.log('Current drafts:', draftResults);
-      console.log('Number of results from server:', data.results.length);
-      
       setTestRun(data);
       
       setDraftResults(prev => {
         if (preserveDrafts && Object.keys(prev).length > 0) {
-          console.log('Preserving existing drafts, not overwriting');
-          console.log('Drafts being preserved:', prev);
           return prev;
         }
         
-        console.log('Initializing fresh drafts from server data');
         const drafts: DraftResults = {};
         data.results.forEach((result: TestResult) => {
           drafts[result.id] = {
@@ -99,7 +90,6 @@ export default function TestRunDetailPage() {
             notes: result.notes || ''
           };
         });
-        console.log('New drafts:', drafts);
         return drafts;
       });
     } catch (error) {
@@ -112,11 +102,6 @@ export default function TestRunDetailPage() {
   };
 
   const handleDraftChange = (resultId: string, field: 'status' | 'notes', value: string) => {
-    console.log(`=== Draft Change ===`);
-    console.log(`Result ID: ${resultId}`);
-    console.log(`Field: ${field}`);
-    console.log(`Value: ${value}`);
-    
     setDraftResults(prev => {
       const currentDraft = prev[resultId] || {
         status: '',
@@ -126,7 +111,6 @@ export default function TestRunDetailPage() {
         ...currentDraft,
         [field]: value
       };
-      console.log('New draft object:', newDraft);
       
       return {
         ...prev,
@@ -142,11 +126,6 @@ export default function TestRunDetailPage() {
       return;
     }
     
-    console.log('=== Saving test result ===');
-    console.log('Result ID:', result.id);
-    console.log('Test Case ID:', result.testCaseId);
-    console.log('Draft data:', draft);
-    
     try {
       setSaving((prev) => ({ ...prev, [result.id]: true }));
       const response = await api.post(`/testruns/${runId}/results`, {
@@ -154,11 +133,8 @@ export default function TestRunDetailPage() {
         status: draft.status,
         notes: draft.notes
       });
-      console.log('Save response:', response);
       
       if (response.data) {
-        console.log('Updated result from server:', response.data);
-        
         setDraftResults(prev => ({
           ...prev,
           [result.id]: {
@@ -181,7 +157,6 @@ export default function TestRunDetailPage() {
       
       toast.success('Test result saved successfully');
     } catch (error: any) {
-      console.error('Save error:', error);
       toast.error(error.message || 'Failed to save test result');
     } finally {
       setSaving((prev) => ({ ...prev, [result.id]: false }));
@@ -456,17 +431,11 @@ export default function TestRunDetailPage() {
                     <label className="block font-bold uppercase mb-2 text-sm">Notes</label>
                     <textarea
                       value={draftResults[result.id]?.notes ?? ''}
-                      onChange={(e) => {
-                        console.log('Notes onChange:', e.target.value);
-                        handleDraftChange(result.id, 'notes', e.target.value);
-                      }}
+                      onChange={(e) => handleDraftChange(result.id, 'notes', e.target.value)}
                       placeholder="Add notes about this test result"
                       className="w-full p-3 border-2 border-black bg-white focus:outline-none focus:ring-2 focus:ring-black min-h-[80px] font-normal text-base"
                       rows={3}
                     />
-                    <div className="text-xs text-gray-500 mt-1">
-                      Debug: "{draftResults[result.id]?.notes ?? 'EMPTY'}"
-                    </div>
                   </div>
 
                   <div className="flex justify-end">
