@@ -67,18 +67,19 @@ export default function NewTestPlanPage() {
 
   const toggleSuiteSelection = (suiteId: string) => {
     const suiteTestCases = groupedTestCases[suiteId]?.testCases || [];
+    const suiteTestCaseIds = suiteTestCases.map(tc => tc.id);
     const allSuiteSelected = suiteTestCases.every(tc => selectedTestCases.includes(tc.id));
-
+ 
     if (allSuiteSelected) {
       setSelectedTestCases(prev =>
-        prev.filter(id => !suiteTestCases.some(tc => tc.id === id))
+        prev.filter(id => !suiteTestCaseIds.includes(id))
       );
     } else {
       setSelectedTestCases(prev => {
         const newSelected = [...prev];
-        suiteTestCases.forEach(tc => {
-          if (!newSelected.includes(tc.id)) {
-            newSelected.push(tc.id);
+        suiteTestCaseIds.forEach(testCaseId => {
+          if (!newSelected.includes(testCaseId)) {
+            newSelected.push(testCaseId);
           }
         });
         return newSelected;

@@ -72,7 +72,8 @@ export default function TestPlanDetailPage() {
     try {
       const data = await api.get(`/testplans/${planId}`);
       setTestPlan(data);
-      setSelectedTestCases(data.testCaseIds || []);
+      const testCaseIds = Array.isArray(data.testCaseIds) ? data.testCaseIds : [];
+      setSelectedTestCases(testCaseIds);
     } catch (error) {
       toast.error('Failed to fetch test plan');
     } finally {
@@ -95,27 +96,32 @@ export default function TestPlanDetailPage() {
   };
 
   const toggleTestCase = (testCaseId: string) => {
-    setSelectedTestCases(prev =>
-      prev.includes(testCaseId)
-        ? prev.filter(id => id !== testCaseId)
-        : [...prev, testCaseId]
-    );
+    setSelectedTestCases(prev => {
+      const current = Array.isArray(prev) ? prev : [];
+      return current.includes(testCaseId)
+        ? current.filter(id => id !== testCaseId)
+        : [...current, testCaseId];
+    });
   };
-
+ 
   const toggleSuiteSelection = (suiteId: string) => {
     const suiteTestCases = groupedTestCases[suiteId]?.testCases || [];
-    const allSuiteSelected = suiteTestCases.every(tc => selectedTestCases.includes(tc.id));
-
+    const suiteTestCaseIds = suiteTestCases.map(tc => tc.id);
+    const currentSelected = Array.isArray(selectedTestCases) ? selectedTestCases : [];
+    const allSuiteSelected = suiteTestCases.every(tc => currentSelected.includes(tc.id));
+ 
     if (allSuiteSelected) {
-      setSelectedTestCases(prev =>
-        prev.filter(id => !suiteTestCases.some(tc => tc.id === id))
-      );
+      setSelectedTestCases(prev => {
+        const current = Array.isArray(prev) ? prev : [];
+        return current.filter(id => !suiteTestCaseIds.includes(id));
+      });
     } else {
       setSelectedTestCases(prev => {
-        const newSelected = [...prev];
-        suiteTestCases.forEach(tc => {
-          if (!newSelected.includes(tc.id)) {
-            newSelected.push(tc.id);
+        const current = Array.isArray(prev) ? prev : [];
+        const newSelected = [...current];
+        suiteTestCaseIds.forEach(testCaseId => {
+          if (!newSelected.includes(testCaseId)) {
+            newSelected.push(testCaseId);
           }
         });
         return newSelected;
@@ -292,7 +298,9 @@ export default function TestPlanDetailPage() {
 
       <NeoCard className="space-y-4">
         <div>
-          <label className="block font-bold uppercase mb-2">Test Cases ({selectedTestCases.length} selected out of {totalTestCases} total)</label>
+          <label className="block font-bold uppercase mb-2">
+            Test Cases ({Array.isArray(selectedTestCases) ? selectedTestCases.length : 0} selected out of {totalTestCases} total)
+          </label>
           
           {allTestCases.length === 0 && totalTestCases === 0 ? (
             <div className="text-center py-8">
@@ -315,73 +323,79 @@ export default function TestPlanDetailPage() {
                     selectedTestCases.includes(tc.id)
                   );
 
-                  return (
-                    <div key={suiteId} className="border-2 border-black bg-white">
-                      <div
-                        className="p-4 cursor-pointer border-b-2 border-black bg-gray-100 hover:bg-gray-200 transition-all flex items-center justify-between gap-4"
-                        onClick={() => toggleSuiteSelection(suiteId)}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="flex-shrink-0">
-                            {allSuiteSelected ? (
-                              <CheckSquare className="w-6 h-6 text-[rgb(57,255,20)]" />
-                            ) : (
-                              <Square className="w-6 h-6" />
-                            )}
-                          </div>
-                          <FolderOpen className="w-6 h-6 text-gray-600" />
-                          <div>
-                            <h3 className="text-xl font-bold uppercase">{suiteData.suiteName}</h3>
-                            <p className="text-sm text-gray-600">
-                              {suiteData.testCases.filter(tc => selectedTestCases.includes(tc.id)).length} / {suiteData.testCases.length} selected
-                            </p>
-                          </div>
-                        </div>
-                        <div className="px-3 py-1 border-2 border-black font-bold text-sm bg-white">
-                          Select All
-                        </div>
-                      </div>
-                      <div className="p-4 space-y-3">
-                        {suiteData.testCases.map((testCase) => (
+                      return (
+                        <div key={suiteId} className="border-2 border-black bg-white">
                           <div
-                            key={testCase.id}
-                            className={`border-2 p-4 cursor-pointer transition-all ${
-                              selectedTestCases.includes(testCase.id)
-                                ? 'border-[rgb(57,255,20)] bg-[rgb(57,255,20)]/10'
-                                : 'border-black bg-white'
-                            }`}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleTestCase(testCase.id);
-                            }}
+                            className="p-4 cursor-pointer border-b-2 border-black bg-gray-100 hover:bg-gray-200 transition-all flex items-center justify-between gap-4"
+                            onClick={() => toggleSuiteSelection(suiteId)}
                           >
-                            <div className="flex items-start justify-between gap-4">
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-2 flex-wrap">
-                                  <span className="px-2 py-1 text-xs font-bold border-2 border-black uppercase bg-gray-200">
-                                    {testCase.status}
-                                  </span>
-                                  <span className="px-2 py-1 text-xs font-bold border-2 border-black uppercase bg-blue-200">
-                                    {testCase.priority}
-                                  </span>
-                                </div>
-                                <h3 className="text-lg font-bold uppercase">{testCase.title}</h3>
-                              </div>
+                            <div className="flex items-center gap-3">
                               <div className="flex-shrink-0">
-                                <div className={`w-6 h-6 border-2 flex items-center justify-center ${
-                                  selectedTestCases.includes(testCase.id)
-                                    ? 'border-black bg-[rgb(57,255,20)]'
-                                    : 'border-black bg-white'
-                                }`}>
-                                  {selectedTestCases.includes(testCase.id) && '✓'}
-                                </div>
+                                {allSuiteSelected ? (
+                                  <CheckSquare className="w-6 h-6 text-[rgb(57,255,20)]" />
+                                ) : (
+                                  <Square className="w-6 h-6" />
+                                )}
+                              </div>
+                              <FolderOpen className="w-6 h-6 text-gray-600" />
+                              <div>
+                                <h3 className="text-xl font-bold uppercase">{suiteData.suiteName}</h3>
+                                <p className="text-sm text-gray-600">
+                                  {suiteData.testCases.filter(tc => {
+                                    const current = Array.isArray(selectedTestCases) ? selectedTestCases : [];
+                                    return current.includes(tc.id);
+                                  }).length} / {suiteData.testCases.length} selected
+                                </p>
                               </div>
                             </div>
+                            <div className="px-3 py-1 border-2 border-black font-bold text-sm bg-white">
+                              Select All
+                            </div>
                           </div>
-                        ))}
-                      </div>
-                    </div>
-                  );
+                          <div className="p-4 space-y-3">
+                            {suiteData.testCases.map((testCase) => {
+                              const current = Array.isArray(selectedTestCases) ? selectedTestCases : [];
+                              return (
+                                <div
+                                  key={testCase.id}
+                                  className={`border-2 p-4 cursor-pointer transition-all ${
+                                    current.includes(testCase.id)
+                                      ? 'border-[rgb(57,255,20)] bg-[rgb(57,255,20)]/10'
+                                      : 'border-black bg-white'
+                                  }`}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleTestCase(testCase.id);
+                                  }}
+                                >
+                                  <div className="flex items-start justify-between gap-4">
+                                    <div className="flex-1">
+                                      <div className="flex items-center gap-2 mb-2 flex-wrap">
+                                        <span className="px-2 py-1 text-xs font-bold border-2 border-black uppercase bg-gray-200">
+                                          {testCase.status}
+                                        </span>
+                                        <span className="px-2 py-1 text-xs font-bold border-2 border-black uppercase bg-blue-200">
+                                          {testCase.priority}
+                                        </span>
+                                      </div>
+                                      <h3 className="text-lg font-bold uppercase">{testCase.title}</h3>
+                                    </div>
+                                    <div className="flex-shrink-0">
+                                      <div className={`w-6 h-6 border-2 flex items-center justify-center ${
+                                        current.includes(testCase.id)
+                                          ? 'border-black bg-[rgb(57,255,20)]'
+                                          : 'border-black bg-white'
+                                      }`}>
+                                        {current.includes(testCase.id) && '✓'}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
                 })}
               </div>
 
