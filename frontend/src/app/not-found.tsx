@@ -1,3 +1,5 @@
+'use client';
+
 import { useRouter } from 'next/navigation';
 import { NeoButton } from '@/components/neobrutalism/neo-button';
 import { AlertCircle } from 'lucide-react';
