@@ -97,19 +97,29 @@ export default function TestRunDetailPage() {
   };
 
   const handleDraftChange = (resultId: string, field: 'status' | 'actualResult' | 'notes', value: string) => {
-    setDraftResults(prev => ({
-      ...prev,
-      [resultId]: {
-        ...prev[resultId],
-        [field]: value
-      }
-    }));
+    setDraftResults(prev => {
+      const currentDraft = prev[resultId] || {
+        status: '',
+        actualResult: '',
+        notes: ''
+      };
+      return {
+        ...prev,
+        [resultId]: {
+          ...currentDraft,
+          [field]: value
+        }
+      };
+    });
   };
 
   const handleResultSave = async (result: TestResult) => {
     const draft = draftResults[result.id];
-    if (!draft) return;
-
+    if (!draft) {
+      toast.error('Please make changes before saving');
+      return;
+    }
+    
     try {
       setSaving((prev) => ({ ...prev, [result.id]: true }));
       await api.post(`/testruns/${runId}/results`, {
@@ -121,6 +131,7 @@ export default function TestRunDetailPage() {
       toast.success('Test result saved successfully');
       fetchTestRun();
     } catch (error: any) {
+      console.error('Save error:', error);
       toast.error(error.message || 'Failed to save test result');
     } finally {
       setSaving((prev) => ({ ...prev, [result.id]: false }));
@@ -323,7 +334,7 @@ export default function TestRunDetailPage() {
                       value={draftResults[result.id]?.actualResult || ''}
                       onChange={(e) => handleDraftChange(result.id, 'actualResult', e.target.value)}
                       placeholder="Enter actual result"
-                      className="w-full p-3 border-2 border-black bg-white focus:outline-none focus:ring-2 focus:ring-black min-h-[100px]"
+                      className="w-full p-3 border-2 border-black bg-white focus:outline-none focus:ring-2 focus:ring-black min-h-[100px] font-normal text-base"
                       rows={4}
                     />
                   </div>
@@ -334,7 +345,7 @@ export default function TestRunDetailPage() {
                       value={draftResults[result.id]?.notes || ''}
                       onChange={(e) => handleDraftChange(result.id, 'notes', e.target.value)}
                       placeholder="Add notes about this test result"
-                      className="w-full p-3 border-2 border-black bg-white focus:outline-none focus:ring-2 focus:ring-black min-h-[80px]"
+                      className="w-full p-3 border-2 border-black bg-white focus:outline-none focus:ring-2 focus:ring-black min-h-[80px] font-normal text-base"
                       rows={3}
                     />
                   </div>
