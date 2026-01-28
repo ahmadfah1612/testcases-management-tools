@@ -12,7 +12,7 @@ This guide shows you how to deploy both the Next.js frontend and Express backend
    - **Root Directory:** `backend`
    - **Framework Preset:** Other
    - **Build Command:** `npm run build`
-   - **Output Directory:** `dist`
+   - **Output Directory:** (leave empty)
    - **Install Command:** `npm install`
 
 4. Add **Backend Environment Variables:**
@@ -32,12 +32,12 @@ This guide shows you how to deploy both the Next.js frontend and Express backend
 ### Step 2: Deploy Frontend to Vercel
 
 1. Go to [vercel.com/new](https://vercel.com/new) again
-2. Import the same GitHub repository
+2. Import same GitHub repository
 3. Configure as **Frontend Project**:
    - **Root Directory:** `frontend`
    - **Framework Preset:** Next.js
-   - **Build Command:** `npm run build`
-   - **Output Directory:** `.next`
+   - **Build Command:** (leave empty - auto-detected)
+   - **Output Directory:** (leave empty - auto-detected)
 
 4. Add **Frontend Environment Variables:**
    ```
