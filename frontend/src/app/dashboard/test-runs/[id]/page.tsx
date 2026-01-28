@@ -29,6 +29,14 @@ interface TestResult {
   updatedAt: string;
 }
 
+interface DraftResults {
+  [resultId: string]: {
+    status: string;
+    actualResult: string;
+    notes: string;
+  };
+}
+
 interface TestRun {
   id: string;
   name: string;
@@ -50,8 +58,9 @@ export default function TestRunDetailPage() {
   
   const [testRun, setTestRun] = useState<TestRun | null>(null);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [saving, setSaving] = useState<{ [resultId: string]: boolean }>({});
   const [expandedResults, setExpandedResults] = useState<Set<string>>(new Set());
+  const [draftResults, setDraftResults] = useState<DraftResults>({});
 
   useEffect(() => {
     if (runId) {
@@ -63,6 +72,15 @@ export default function TestRunDetailPage() {
     try {
       const data = await api.get(`/testruns/${runId}`);
       setTestRun(data);
+      const drafts: DraftResults = {};
+      data.results.forEach((result: TestResult) => {
+        drafts[result.id] = {
+          status: result.status,
+          actualResult: result.actualResult || '',
+          notes: result.notes || ''
+        };
+      });
+      setDraftResults(drafts);
     } catch (error) {
       toast.error('Failed to fetch test run');
       router.push('/dashboard/test-runs');
@@ -71,19 +89,34 @@ export default function TestRunDetailPage() {
     }
   };
 
-  const handleResultUpdate = async (result: TestResult, updates: Partial<TestResult>) => {
+  const handleDraftChange = (resultId: string, field: 'status' | 'actualResult' | 'notes', value: string) => {
+    setDraftResults(prev => ({
+      ...prev,
+      [resultId]: {
+        ...prev[resultId],
+        [field]: value
+      }
+    }));
+  };
+
+  const handleResultSave = async (result: TestResult) => {
+    const draft = draftResults[result.id];
+    if (!draft) return;
+
     try {
-      setSaving(true);
+      setSaving((prev) => ({ ...prev, [result.id]: true }));
       await api.post(`/testruns/${runId}/results`, {
         testCaseId: result.testCaseId,
-        ...updates
+        status: draft.status,
+        actualResult: draft.actualResult,
+        notes: draft.notes
       });
-      toast.success('Test result updated successfully');
+      toast.success('Test result saved successfully');
       fetchTestRun();
     } catch (error: any) {
-      toast.error(error.message || 'Failed to update test result');
+      toast.error(error.message || 'Failed to save test result');
     } finally {
-      setSaving(false);
+      setSaving((prev) => ({ ...prev, [result.id]: false }));
     }
   };
 
@@ -259,8 +292,8 @@ export default function TestRunDetailPage() {
                       {['PASS', 'FAIL', 'SKIP'].map((status) => (
                         <NeoButton
                           key={status}
-                          variant={result.status === status ? 'primary' : 'secondary'}
-                          onClick={() => handleResultUpdate(result, { status })}
+                          variant={draftResults[result.id]?.status === status ? 'primary' : 'secondary'}
+                          onClick={() => handleDraftChange(result.id, 'status', status)}
                           className="px-4 py-2"
                         >
                           {status}
@@ -271,24 +304,36 @@ export default function TestRunDetailPage() {
 
                   <div>
                     <label className="block font-bold uppercase mb-2 text-sm">Actual Result</label>
-                    <NeoInput
-                      value={result.actualResult || ''}
-                      onChange={(e) => handleResultUpdate(result, { actualResult: e.target.value })}
+                    <textarea
+                      value={draftResults[result.id]?.actualResult || ''}
+                      onChange={(e) => handleDraftChange(result.id, 'actualResult', e.target.value)}
                       placeholder="Enter actual result"
-                      multiline
+                      className="w-full p-3 border-2 border-black bg-white focus:outline-none focus:ring-2 focus:ring-black min-h-[100px]"
                       rows={4}
                     />
                   </div>
 
                   <div>
                     <label className="block font-bold uppercase mb-2 text-sm">Notes</label>
-                    <NeoInput
-                      value={result.notes || ''}
-                      onChange={(e) => handleResultUpdate(result, { notes: e.target.value })}
+                    <textarea
+                      value={draftResults[result.id]?.notes || ''}
+                      onChange={(e) => handleDraftChange(result.id, 'notes', e.target.value)}
                       placeholder="Add notes about this test result"
-                      multiline
+                      className="w-full p-3 border-2 border-black bg-white focus:outline-none focus:ring-2 focus:ring-black min-h-[80px]"
                       rows={3}
                     />
+                  </div>
+
+                  <div className="flex justify-end">
+                    <NeoButton
+                      variant="primary"
+                      onClick={() => handleResultSave(result)}
+                      disabled={saving[result.id]}
+                      className="flex items-center gap-2"
+                    >
+                      <Save className="w-4 h-4" />
+                      {saving[result.id] ? 'Saving...' : 'Save'}
+                    </NeoButton>
                   </div>
                 </div>
               </div>
