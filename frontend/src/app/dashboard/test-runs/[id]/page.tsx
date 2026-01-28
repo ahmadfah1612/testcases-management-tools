@@ -284,23 +284,23 @@ export default function TestRunDetailPage() {
         <h2 className="text-2xl font-bold uppercase mb-4">Run Statistics</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="border-4 border-black bg-white p-4 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-shadow">
-            <div className="text-sm text-gray-600 uppercase">Total</div>
+            <div className="text-sm text-gray-600 uppercase mb-1">Total</div>
             <div className="text-4xl font-bold">{testRun.resultsCount}</div>
           </div>
           <div className="border-4 border-black bg-[rgb(57,255,20)] p-4 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-shadow">
-            <div className="text-sm text-black uppercase font-bold">Passed</div>
-            <div className="text-4xl font-bold">{passed}</div>
-            <div className="text-sm font-bold text-[rgb(57,255,20)]">{passedPercent}%</div>
+            <div className="text-sm text-gray-600 uppercase mb-1">Passed</div>
+            <div className="text-3xl font-bold text-black">{passed}</div>
+            <div className="text-2xl font-bold text-black mt-2">{passedPercent}%</div>
           </div>
           <div className="border-4 border-black bg-[rgb(239,68,68)] p-4 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-shadow">
-            <div className="text-sm text-black uppercase font-bold">Failed</div>
-            <div className="text-4xl font-bold">{failed}</div>
-            <div className="text-sm font-bold text-[rgb(239,68,68)]">{failedPercent}%</div>
+            <div className="text-sm text-gray-600 uppercase mb-1">Failed</div>
+            <div className="text-3xl font-bold text-black">{failed}</div>
+            <div className="text-2xl font-bold text-black mt-2">{failedPercent}%</div>
           </div>
           <div className="border-4 border-black bg-gray-300 p-4 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-shadow">
-            <div className="text-sm text-black uppercase font-bold">Skipped</div>
-            <div className="text-4xl font-bold">{skipped}</div>
-            <div className="text-sm font-bold">{skippedPercent}%</div>
+            <div className="text-sm text-gray-600 uppercase mb-1">Skipped</div>
+            <div className="text-3xl font-bold text-black">{skipped}</div>
+            <div className="text-2xl font-bold text-black mt-2">{skippedPercent}%</div>
           </div>
         </div>
 
