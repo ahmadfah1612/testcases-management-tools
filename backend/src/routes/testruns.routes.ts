@@ -65,7 +65,12 @@ router.get('/', async (req: AuthRequest, res) => {
 
 router.get('/:id', async (req: AuthRequest, res) => {
   try {
-    const { data: testRun, error } = await supabase
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const offset = (page - 1) * limit;
+    const resultsOffset = parseInt(req.query.resultsOffset as string) || 0;
+
+    const { data: runData, error: fetchError } = await supabase
       .from('test_runs')
       .select(`
         *,
@@ -78,11 +83,11 @@ router.get('/:id', async (req: AuthRequest, res) => {
       .eq('id', req.params.id)
       .single();
 
-    if (error || !testRun) {
+    if (fetchError || !runData) {
       return res.status(404).json({ error: 'Test run not found' });
     }
 
-    const { data: results } = await supabase
+    const { data: results, count } = await supabase
       .from('test_results')
       .select(`
         *,
@@ -93,17 +98,18 @@ router.get('/:id', async (req: AuthRequest, res) => {
           status,
           priority
         )
-      `)
+      `, { count: 'exact' })
       .eq('test_run_id', req.params.id)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .range(resultsOffset, resultsOffset + limit - 1);
 
     const formattedRun = {
-      ...testRun,
-      testPlan: testRun.test_plans,
-      testPlanId: testRun.test_plan_id,
-      startedBy: testRun.started_by,
-      startedAt: testRun.started_at,
-      completedAt: testRun.completed_at,
+      ...runData,
+      testPlan: runData.test_plans,
+      testPlanId: runData.test_plan_id,
+      startedBy: runData.started_by,
+      startedAt: runData.started_at,
+      completedAt: runData.completed_at,
       results: results?.map((r: any) => ({
         ...r,
         testCase: r.test_cases,
@@ -112,7 +118,14 @@ router.get('/:id', async (req: AuthRequest, res) => {
         createdBy: r.created_by,
         createdAt: r.created_at,
         updatedAt: r.updated_at
-      })) || []
+      })) || [],
+      resultsCount: count || 0,
+      pagination: {
+        page,
+        limit,
+        total: count || 0,
+        totalPages: Math.ceil((count || 0) / limit)
+      }
     };
 
     res.json(formattedRun);

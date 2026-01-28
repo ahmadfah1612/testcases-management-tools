@@ -49,6 +49,7 @@ interface TestRun {
     description: string;
   };
   results: TestResult[];
+  resultsCount: number;
 }
 
 export default function TestRunDetailPage() {
@@ -61,17 +62,22 @@ export default function TestRunDetailPage() {
   const [saving, setSaving] = useState<{ [resultId: string]: boolean }>({});
   const [expandedResults, setExpandedResults] = useState<Set<string>>(new Set());
   const [draftResults, setDraftResults] = useState<DraftResults>({});
+  const [resultsPage, setResultsPage] = useState(1);
+  const [resultsLimit] = useState(10);
+  const [loadingResults, setLoadingResults] = useState(false);
 
   useEffect(() => {
     if (runId) {
       fetchTestRun();
     }
-  }, [runId]);
+  }, [runId, resultsPage]);
 
   const fetchTestRun = async () => {
     try {
-      const data = await api.get(`/testruns/${runId}`);
+      const resultsOffset = (resultsPage - 1) * resultsLimit;
+      const data = await api.get(`/testruns/${runId}?page=${resultsPage}&limit=${resultsLimit}&resultsOffset=${resultsOffset}`);
       setTestRun(data);
+      
       const drafts: DraftResults = {};
       data.results.forEach((result: TestResult) => {
         drafts[result.id] = {
@@ -86,6 +92,7 @@ export default function TestRunDetailPage() {
       router.push('/dashboard/test-runs');
     } finally {
       setLoading(false);
+      setLoadingResults(false);
     }
   };
 
@@ -198,6 +205,7 @@ export default function TestRunDetailPage() {
     );
   }
 
+  const totalPages = Math.ceil((testRun.resultsCount || 0) / resultsLimit);
   const passed = testRun.results.filter(r => r.status === 'PASS').length;
   const failed = testRun.results.filter(r => r.status === 'FAIL').length;
   const skipped = testRun.results.filter(r => r.status === 'SKIP').length;
@@ -236,7 +244,7 @@ export default function TestRunDetailPage() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="border-2 border-black bg-white p-4">
             <div className="text-sm text-gray-600 uppercase">Total</div>
-            <div className="text-3xl font-bold">{testRun.results.length}</div>
+            <div className="text-3xl font-bold">{testRun.resultsCount}</div>
           </div>
           <div className="border-2 border-black bg-[rgb(57,255,20)]/20 p-4">
             <div className="text-sm text-gray-600 uppercase">Passed</div>
@@ -254,7 +262,14 @@ export default function TestRunDetailPage() {
       </NeoCard>
 
       <div className="space-y-4">
-        <h2 className="text-2xl font-bold uppercase">Test Results</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold uppercase">Test Results</h2>
+          {testRun.resultsCount > resultsLimit && (
+            <span className="text-sm text-gray-600">
+              Page {resultsPage} of {totalPages} ({testRun.resultsCount} total)
+            </span>
+          )}
+        </div>
         {testRun.results.map((result) => (
           <NeoCard key={result.id} className="hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all">
             <div
@@ -341,6 +356,33 @@ export default function TestRunDetailPage() {
           </NeoCard>
         ))}
       </div>
+
+      {testRun.resultsCount > resultsLimit && (
+        <NeoCard className="flex items-center justify-center gap-4 py-4">
+          <NeoButton
+            variant="secondary"
+            onClick={() => setResultsPage(p => Math.max(1, p - 1))}
+            disabled={resultsPage === 1 || loadingResults}
+            className="flex items-center gap-2"
+          >
+            Previous
+          </NeoButton>
+          <span className="font-bold uppercase">
+            Page {resultsPage} of {totalPages}
+          </span>
+          <span className="text-sm text-gray-600">
+            ({testRun.resultsCount} total)
+          </span>
+          <NeoButton
+            variant="secondary"
+            onClick={() => setResultsPage(p => Math.min(totalPages, p + 1))}
+            disabled={resultsPage === totalPages || loadingResults}
+            className="flex items-center gap-2"
+          >
+            Next
+          </NeoButton>
+        </NeoCard>
+      )}
     </div>
   );
 }
