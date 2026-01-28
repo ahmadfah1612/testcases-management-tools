@@ -8,7 +8,11 @@ router.use(authMiddleware);
 
 router.get('/', async (req: AuthRequest, res) => {
   try {
-    const { data: testRuns, error } = await supabase
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const offset = (page - 1) * limit;
+
+    const { data: testRuns, error, count } = await supabase
       .from('test_runs')
       .select(`
         *,
@@ -17,9 +21,10 @@ router.get('/', async (req: AuthRequest, res) => {
           name,
           description
         )
-      `)
+      `, { count: 'exact' })
       .eq('started_by', req.dbUserId!)
-      .order('started_at', { ascending: false });
+      .order('started_at', { ascending: false })
+      .range(offset, offset + limit - 1);
 
     if (error) {
       return res.status(500).json({ error: 'Failed to fetch test runs' });
@@ -44,7 +49,15 @@ router.get('/', async (req: AuthRequest, res) => {
       })
     );
 
-    res.json(formattedRuns);
+    res.json({
+      data: formattedRuns,
+      pagination: {
+        page,
+        limit,
+        total: count || 0,
+        totalPages: Math.ceil((count || 0) / limit)
+      }
+    });
   } catch (error) {
     res.status(500).json({ error: 'Internal server error' });
   }
