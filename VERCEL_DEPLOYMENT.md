@@ -4,12 +4,18 @@ This guide shows you how to deploy both the Next.js frontend and Express backend
 
 ## 🚀 Quick Deployment (Recommended)
 
+### ⚠️ IMPORTANT: Deploy Backend and Frontend as SEPARATE Projects
+
+You must create **two separate Vercel projects**:
+1. One for **Backend** (root directory: `backend`)
+2. One for **Frontend** (root directory: `frontend`)
+
 ### Step 1: Deploy Backend to Vercel
 
 1. Go to [vercel.com/new](https://vercel.com/new)
 2. Import your GitHub repository
 3. Configure as **Backend Project**:
-   - **Root Directory:** `backend`
+   - **Root Directory:** `backend` ⚠️ CRITICAL
    - **Framework Preset:** Other
    - **Build Command:** `npm run build`
    - **Output Directory:** (leave empty)
@@ -23,34 +29,42 @@ This guide shows you how to deploy both the Next.js frontend and Express backend
    SUPABASE_SERVICE_KEY=your_supabase_service_role_key
    JWT_SECRET=generate_a_random_32_character_string
    NODE_ENV=production
+   VERCEL=1
    ```
 
 5. Click **Deploy**
 
 6. After deployment, copy your backend URL (e.g., `https://test-management-backend.vercel.app`)
+   - Your backend URL will be something like: `https://your-project-name.vercel.app`
+
+7. **Verify Backend is Working:**
+   ```
+   curl https://your-backend-url.vercel.app/api/health
+   ```
+   Should return: `{"status":"ok","message":"Test Management API is running"}`
 
 ### Step 2: Deploy Frontend to Vercel
 
 1. Go to [vercel.com/new](https://vercel.com/new) again
 2. Import same GitHub repository
 3. Configure as **Frontend Project**:
-   - **Root Directory:** `frontend`
+   - **Root Directory:** `frontend` ⚠️ CRITICAL
    - **Framework Preset:** Next.js
    - **Build Command:** (leave empty - auto-detected)
    - **Output Directory:** (leave empty - auto-detected)
 
 4. Add **Frontend Environment Variables:**
    ```
-   NEXT_PUBLIC_API_URL=https://test-management-backend.vercel.app/api
+   NEXT_PUBLIC_API_URL=https://your-backend-url.vercel.app/api
    NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
    NEXT_PUBLIC_INACTIVITY_TIMEOUT_HOURS=2
    ```
-   **Replace** `test-management-backend.vercel.app` with your actual backend URL from Step 1
+   **Replace** `your-backend-url.vercel.app` with your ACTUAL backend URL from Step 1
 
 5. Click **Deploy**
 
-6. After deployment, your app will be available at `https://test-management-frontend.vercel.app`
+6. After deployment, your app will be available at `https://your-frontend-url.vercel.app`
 
 ## 📋 Environment Variables Reference
 
@@ -117,6 +131,41 @@ After deployment:
    - Click on latest deployment
    - View Function Logs for backend
    - View Build Logs for any errors
+
+## ⚠️ If You're Getting "Page Not Found" on Backend
+
+If you deployed backend to Vercel but getting "NOT_FOUND" errors:
+
+### Problem
+You likely deployed with **Root Directory** set to `/` (root) instead of `/backend`.
+
+This means Vercel deployed the **frontend** (Next.js) instead of backend (Express API).
+
+### Solution
+
+1. **Delete the existing Vercel project** (or redeploy with correct settings)
+2. Create a NEW Vercel project for backend:
+   - Go to [vercel.com/new](https://vercel.com/new)
+   - Import your repo
+   - Set **Root Directory:** `backend` (⚠️ MUST BE `backend`, NOT `/`)
+   - Set **Framework Preset:** Other
+   - Deploy
+
+3. Your backend URL will be: `https://your-new-backend-project-name.vercel.app`
+
+### Verify Correct Backend Deployment
+
+Test your backend health endpoint:
+```bash
+curl https://your-backend-url.vercel.app/api/health
+```
+
+Should return:
+```json
+{"status":"ok","message":"Test Management API is running"}
+```
+
+If you get "NOT_FOUND", you deployed the wrong thing (frontend instead of backend).
 
 ## 🔄 Update Frontend API URL
 
