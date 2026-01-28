@@ -25,18 +25,27 @@ router.get('/', async (req: AuthRequest, res) => {
 
     const formattedPlans = await Promise.all(
       (testPlans || []).map(async (plan: any) => {
-        const { count } = await supabase
-          .from('test_runs')
-          .select('*', { count: 'exact', head: true })
-          .eq('test_plan_id', plan.id);
+        const [runsCount, assignmentsCount] = await Promise.all([
+          supabase
+            .from('test_runs')
+            .select('*', { count: 'exact', head: true })
+            .eq('test_plan_id', plan.id),
+          supabase
+            .from('test_plan_assignments')
+            .select('*', { count: 'exact', head: true })
+            .eq('plan_id', plan.id)
+        ]);
 
         return {
           ...plan,
-          testCaseIds: plan.test_case_ids,
+          testCaseIds: plan.test_case_ids || [],
           createdBy: plan.created_by,
           createdAt: plan.created_at,
           updatedAt: plan.updated_at,
-          _count: { runs: count || 0 }
+          _count: { 
+            runs: runsCount.count || 0,
+            testCases: assignmentsCount.count || 0
+          }
         };
       })
     );

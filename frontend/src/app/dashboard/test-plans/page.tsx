@@ -17,6 +17,7 @@ interface TestPlan {
   updatedAt: string;
   _count: {
     runs: number;
+    testCases: number;
   };
 }
 
@@ -108,19 +109,19 @@ export default function TestPlansPage() {
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="p-2 bg-[rgb(57,255,20)] border-2 border-black">
-                      <PlayCircle className="w-6 h-6" />
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="p-2 bg-[rgb(57,255,20)] border-2 border-black">
+                        <PlayCircle className="w-6 h-6" />
+                      </div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="border-2 border-black px-3 py-1 font-bold text-sm">
+                          {plan._count.testCases} cases
+                        </span>
+                        <span className="border-2 border-black px-3 py-1 font-bold text-sm bg-[rgb(0,191,255)]/20">
+                          {plan._count.runs} runs
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="border-2 border-black px-3 py-1 font-bold text-sm">
-                        {plan.testCaseIds.length} cases
-                      </span>
-                      <span className="border-2 border-black px-3 py-1 font-bold text-sm bg-[rgb(0,191,255)]/20">
-                        {plan._count.runs} runs
-                      </span>
-                    </div>
-                  </div>
                   <h2 className="text-2xl font-bold uppercase mb-2">{plan.name}</h2>
                   {plan.description && (
                     <p className="text-gray-600 line-clamp-2 mb-3">{plan.description}</p>
