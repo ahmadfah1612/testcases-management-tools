@@ -124,43 +124,34 @@ router.get('/:id', async (req: AuthRequest, res) => {
   }
 });
 
-router.post('/', async (req: AuthRequest, res) => {
-  try {
-    const { name, description, testCaseIds } = req.body;
-    
-    const { data: testPlan, error: insertError } = await supabase
-      .from('test_plans')
-      .insert({
-        name,
-        description,
-        test_case_ids: testCaseIds || [],
-        created_by: req.dbUserId!
-      })
-      .select()
-      .single();
+  router.post('/', async (req: AuthRequest, res) => {
+    try {
+      const { name, description, testCaseIds } = req.body;
+      
+      const { data: testPlan, error: insertError } = await supabase
+        .from('test_plans')
+        .insert({
+          name,
+          description,
+          test_case_ids: testCaseIds || [],
+          created_by: req.dbUserId
+        })
+        .select()
+        .single();
 
-    if (insertError) {
-      return res.status(500).json({ error: 'Failed to create test plan' });
-    }
-    
-    if (testCaseIds && testCaseIds.length > 0) {
-      const assignments = testCaseIds.map((testCaseId: string) => ({
-        test_case_id: testCaseId,
-        plan_id: testPlan.id
-      }));
+      if (insertError) {
+        return res.status(500).json({ error: 'Failed to create test plan' });
+      }
+      
+      const formattedPlan = {
+        ...testPlan,
+        testCaseIds: testPlan.test_case_ids,
+        createdBy: testPlan.created_by,
+        createdAt: testPlan.created_at,
+        updatedAt: testPlan.updated_at
+      };
 
-      await supabase.from('test_plan_assignments').insert(assignments);
-    }
-    
-    const formattedPlan = {
-      ...testPlan,
-      testCaseIds: testPlan.test_case_ids,
-      createdBy: testPlan.created_by,
-      createdAt: testPlan.created_at,
-      updatedAt: testPlan.updated_at
-    };
-
-    res.status(201).json(formattedPlan);
+      res.status(201).json(formattedPlan);
   } catch (error) {
     res.status(500).json({ error: 'Internal server error' });
   }
