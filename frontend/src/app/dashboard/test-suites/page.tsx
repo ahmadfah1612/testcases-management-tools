@@ -25,15 +25,22 @@ export default function TestSuitesPage() {
   const [suites, setSuites] = useState<TestSuite[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteModal, setDeleteModal] = useState<{ id: string; name: string } | null>(null);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
+  const limit = 10;
 
   useEffect(() => {
     fetchSuites();
-  }, []);
+  }, [page]);
 
   const fetchSuites = async () => {
     try {
-      const data = await api.get('/testsuites');
-      setSuites(data);
+      setLoading(true);
+      const data = await api.get(`/testsuites?page=${page}&limit=${limit}`);
+      setSuites(data.data || []);
+      setTotalPages(data.pagination?.totalPages || 1);
+      setTotal(data.pagination?.total || 0);
     } catch (error) {
       toast.error('Failed to fetch test suites');
     } finally {
@@ -46,7 +53,11 @@ export default function TestSuitesPage() {
       await api.delete(`/testsuites/${id}`);
       toast.success('Test suite deleted successfully');
       setDeleteModal(null);
-      fetchSuites();
+      if (page > 1 && suites.length === 1) {
+        setPage(page - 1);
+      } else {
+        fetchSuites();
+      }
     } catch (error: any) {
       toast.error(error.message || 'Failed to delete test suite');
     }
@@ -130,9 +141,36 @@ export default function TestSuitesPage() {
                 </p>
               </div>
             </NeoCard>
-          ))}
-        </div>
-      )}
+           ))}
+         </div>
+       )}
+
+       {!loading && suites.length > 0 && totalPages > 1 && (
+         <NeoCard className="flex items-center justify-center gap-4 py-4">
+           <NeoButton
+             variant="secondary"
+             onClick={() => setPage(p => Math.max(1, p - 1))}
+             disabled={page === 1}
+             className="flex items-center gap-2"
+           >
+             Previous
+           </NeoButton>
+           <span className="font-bold uppercase">
+             Page {page} of {totalPages}
+           </span>
+           <span className="text-sm text-gray-600">
+             ({total} total)
+           </span>
+           <NeoButton
+             variant="secondary"
+             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+             disabled={page === totalPages}
+             className="flex items-center gap-2"
+           >
+             Next
+           </NeoButton>
+         </NeoCard>
+       )}
 
       {deleteModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">

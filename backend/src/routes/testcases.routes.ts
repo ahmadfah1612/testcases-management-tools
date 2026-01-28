@@ -8,7 +8,11 @@ router.use(authMiddleware);
 
 router.get('/', async (req: AuthRequest, res) => {
   try {
-    const { suiteId, status, priority } = req.query;
+    const { suiteId, status, priority, page = 1, limit = 10 } = req.query;
+    
+    const pageNum = parseInt(page as string);
+    const limitNum = parseInt(limit as string);
+    const offset = (pageNum - 1) * limitNum;
     
     let query = supabase
       .from('test_cases')
@@ -19,9 +23,10 @@ router.get('/', async (req: AuthRequest, res) => {
           name,
           description
         )
-      `)
+      `, { count: 'exact' })
       .eq('created_by', req.dbUserId!)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limitNum - 1);
 
     if (suiteId) {
       query = query.eq('suite_id', suiteId as string);
@@ -33,7 +38,7 @@ router.get('/', async (req: AuthRequest, res) => {
       query = query.eq('priority', priority as string);
     }
 
-    const { data: testCases, error } = await query;
+    const { data: testCases, error, count } = await query;
 
     if (error) {
       return res.status(500).json({ error: 'Failed to fetch test cases' });
@@ -50,7 +55,15 @@ router.get('/', async (req: AuthRequest, res) => {
       tags: typeof tc.tags === 'string' ? JSON.parse(tc.tags) : tc.tags
     })) || [];
 
-    res.json(formattedTestCases);
+    res.json({
+      data: formattedTestCases,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total: count || 0,
+        totalPages: Math.ceil((count || 0) / limitNum)
+      }
+    });
   } catch (error) {
     res.status(500).json({ error: 'Internal server error' });
   }

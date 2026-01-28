@@ -22,7 +22,11 @@ router.use(authMiddleware);
 
 router.get('/', async (req: AuthRequest, res) => {
   try {
-    const { data: testSuites, error } = await supabase
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const offset = (page - 1) * limit;
+
+    const { data: testSuites, error, count } = await supabase
       .from('test_suites')
       .select(`
         *,
@@ -35,10 +39,11 @@ router.get('/', async (req: AuthRequest, res) => {
           created_at,
           updated_at
         )
-      `)
+      `, { count: 'exact' })
       .eq('created_by', req.dbUserId!)
       .is('parent_id', null)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
 
     if (error) {
       return res.status(500).json({ error: 'Failed to fetch test suites' });
@@ -69,7 +74,15 @@ router.get('/', async (req: AuthRequest, res) => {
       })
     );
 
-    res.json(formattedSuites);
+    res.json({
+      data: formattedSuites,
+      pagination: {
+        page,
+        limit,
+        total: count || 0,
+        totalPages: Math.ceil((count || 0) / limit)
+      }
+    });
   } catch (error) {
     res.status(500).json({ error: 'Internal server error' });
   }

@@ -28,20 +28,32 @@ export default function TestCasesPage() {
   const [testCases, setTestCases] = useState<TestCase[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState({ status: '', priority: '' });
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
+  const limit = 10;
+
+  useEffect(() => {
+    setPage(1);
+  }, [filter]);
 
   useEffect(() => {
     fetchTestCases();
-  }, [filter]);
+  }, [page, filter]);
 
   const fetchTestCases = async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams();
+      params.append('page', page.toString());
+      params.append('limit', limit.toString());
       if (filter.status) params.append('status', filter.status);
       if (filter.priority) params.append('priority', filter.priority);
       
-      const data = await api.get(`/testcases${params.toString() ? `?${params.toString()}` : ''}`);
-      setTestCases(data);
+      const data = await api.get(`/testcases?${params.toString()}`);
+      setTestCases(data.data || []);
+      setTotalPages(data.pagination?.totalPages || 1);
+      setTotal(data.pagination?.total || 0);
     } catch (error) {
       toast.error('Failed to load test cases');
     } finally {
@@ -55,7 +67,11 @@ export default function TestCasesPage() {
     try {
       await api.delete(`/testcases/${id}`);
       toast.success('Test case deleted successfully');
-      fetchTestCases();
+      if (page > 1 && testCases.length === 1) {
+        setPage(page - 1);
+      } else {
+        fetchTestCases();
+      }
     } catch (error: any) {
       toast.error(error.message || 'Failed to delete test case');
     }
@@ -224,10 +240,37 @@ export default function TestCasesPage() {
                   </div>
                 </div>
               </NeoCard>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
+             ))}
+           </div>
+         )}
+
+         {!loading && testCases.length > 0 && totalPages > 1 && (
+           <NeoCard className="flex items-center justify-center gap-4 py-4">
+             <NeoButton
+               variant="secondary"
+               onClick={() => setPage(p => Math.max(1, p - 1))}
+               disabled={page === 1}
+               className="flex items-center gap-2"
+             >
+               Previous
+             </NeoButton>
+             <span className="font-bold uppercase">
+               Page {page} of {totalPages}
+             </span>
+             <span className="text-sm text-gray-600">
+               ({total} total)
+             </span>
+             <NeoButton
+               variant="secondary"
+               onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+               disabled={page === totalPages}
+               className="flex items-center gap-2"
+             >
+               Next
+             </NeoButton>
+           </NeoCard>
+         )}
+       </div>
+     </div>
+   );
+ }
