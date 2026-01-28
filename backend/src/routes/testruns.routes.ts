@@ -256,7 +256,14 @@ router.post('/:id/results', async (req: AuthRequest, res) => {
   try {
     const { testCaseId, status, actualResult, screenshots, notes } = req.body;
     
-    const { error } = await supabase
+    console.log('=== Updating test result ===');
+    console.log('Test Run ID:', req.params.id);
+    console.log('Test Case ID:', testCaseId);
+    console.log('Status:', status);
+    console.log('Actual Result:', actualResult);
+    console.log('Notes:', notes);
+    
+    const { data: updatedResult, error } = await supabase
       .from('test_results')
       .update({
         status,
@@ -265,15 +272,21 @@ router.post('/:id/results', async (req: AuthRequest, res) => {
         notes
       })
       .eq('test_run_id', req.params.id)
-      .eq('test_case_id', testCaseId);
+      .eq('test_case_id', testCaseId)
+      .select()
+      .single();
     
     if (error) {
-      return res.status(500).json({ error: 'Failed to update test result' });
+      console.error('Supabase update error:', error);
+      return res.status(500).json({ error: 'Failed to update test result', details: error.message });
     }
     
-    res.json({ success: true });
+    console.log('Updated result:', updatedResult);
+    
+    res.json({ success: true, data: updatedResult });
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('Server error updating test result:', error);
+    res.status(500).json({ error: 'Internal server error', details: (error as any).message });
   }
 });
 

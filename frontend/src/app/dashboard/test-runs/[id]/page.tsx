@@ -120,16 +120,39 @@ export default function TestRunDetailPage() {
       return;
     }
     
+    console.log('=== Saving test result ===');
+    console.log('Result ID:', result.id);
+    console.log('Test Case ID:', result.testCaseId);
+    console.log('Draft data:', draft);
+    
     try {
       setSaving((prev) => ({ ...prev, [result.id]: true }));
-      await api.post(`/testruns/${runId}/results`, {
+      const response = await api.post(`/testruns/${runId}/results`, {
         testCaseId: result.testCaseId,
         status: draft.status,
         actualResult: draft.actualResult,
         notes: draft.notes
       });
+      console.log('Save response:', response);
       toast.success('Test result saved successfully');
-      fetchTestRun();
+      
+      // Only reload if successful - don't reset the draft that was just saved
+      // Actually, let's NOT reload to preserve what user just typed
+      // Just update the result data locally
+      // fetchTestRun();
+      
+      // Instead, update the test run result locally to show saved status
+      setTestRun(prev => prev ? {
+        ...prev,
+        results: prev.results.map(r => 
+          r.id === result.id ? {
+            ...r,
+            status: draft.status,
+            actualResult: draft.actualResult,
+            notes: draft.notes
+          } : r
+        )
+      } : null);
     } catch (error: any) {
       console.error('Save error:', error);
       toast.error(error.message || 'Failed to save test result');
