@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, Suspense } from 'react';
 import { useAuth } from '@/lib/auth-context';
-import { supabase } from '@/lib/supabase';
 import { NeoCard } from '@/components/neobrutalism/neo-card';
 import { NeoInput } from '@/components/neobrutalism/neo-input';
 import { NeoButton } from '@/components/neobrutalism/neo-button';
@@ -19,78 +18,21 @@ function ResetPasswordForm() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [isValidating, setIsValidating] = useState(true);
-  const [accessToken, setAccessToken] = useState<string | null>(null);
-  const [isValid, setIsValid] = useState<boolean | null>(null);
 
-  useEffect(() => {
-    // Small delay to let any React Strict Mode cleanup finish
-    const timer = setTimeout(() => {
-      validateToken();
-    }, 100);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  const validateToken = async () => {
-    try {
-      setIsValidating(true);
-      
-      // Extract token from URL hash
-      const hash = window.location.hash;
-      if (!hash || !hash.includes('access_token')) {
-        console.log('No access_token in URL hash');
-        setIsValid(false);
-        setIsValidating(false);
-        return;
-      }
-
-      // Parse hash parameters
-      const hashParams = new URLSearchParams(hash.substring(1));
-      const token = hashParams.get('access_token');
-      
-      if (!token) {
-        console.log('access_token is empty');
-        setIsValid(false);
-        setIsValidating(false);
-        return;
-      }
-
-      console.log('Found access_token, length:', token.length);
-
-      // Validate token with Supabase
-      const { data, error } = await supabase.auth.getUser(token);
-      
-      if (error) {
-        console.error('Token validation failed:', error.message);
-        setIsValid(false);
-        setIsValidating(false);
-        return;
-      }
-
-      if (!data.user) {
-        console.error('No user found for token');
-        setIsValid(false);
-        setIsValidating(false);
-        return;
-      }
-
-      console.log('Token validated for user:', data.user.email);
-      
-      // Token is valid, store it and show the form
-      setAccessToken(token);
-      setIsValid(true);
-      setIsValidating(false);
-      
-      // Clear hash from URL for security (but keep token in state)
-      window.history.replaceState(null, '', window.location.pathname);
-      
-    } catch (error: any) {
-      console.error('Validation error:', error);
-      setIsValid(false);
-      setIsValidating(false);
+  // Extract token from URL hash synchronously (no async calls)
+  const getTokenFromUrl = (): string | null => {
+    if (typeof window === 'undefined') return null;
+    
+    const hash = window.location.hash;
+    if (!hash || !hash.includes('access_token')) {
+      return null;
     }
+
+    const hashParams = new URLSearchParams(hash.substring(1));
+    return hashParams.get('access_token');
   };
+
+  const accessToken = getTokenFromUrl();
 
   const validatePassword = (password: string): string | null => {
     if (password.length < 8) {
@@ -114,7 +56,7 @@ function ResetPasswordForm() {
     setSuccess(false);
 
     if (!accessToken) {
-      setError('Invalid or missing reset token');
+      setError('Invalid or missing reset token. Please request a new reset link.');
       return;
     }
 
@@ -136,23 +78,18 @@ function ResetPasswordForm() {
     try {
       await resetPassword(accessToken, newPassword);
       setSuccess(true);
+      // Clear the hash from URL for security
+      window.history.replaceState(null, '', window.location.pathname);
     } catch (err: any) {
-      setError(err.message || 'Failed to reset password');
+      console.error('Reset password error:', err);
+      setError(err.message || 'Failed to reset password. The link may have expired.');
     } finally {
       setLoading(false);
     }
   };
 
-  if (isValidating) {
-    return (
-      <div className="text-center py-4">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black mx-auto"></div>
-        <p className="mt-2">Verifying reset link...</p>
-      </div>
-    );
-  }
-
-  if (!isValid) {
+  // If no token in URL, show error immediately
+  if (!accessToken) {
     return (
       <>
         <div className="border-2 border-black bg-[rgb(var(--neo-red))] p-4 mb-6 flex items-start gap-2">
