@@ -235,10 +235,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const resetPassword = async (_accessToken: string, newPassword: string) => {
+  const resetPassword = async (accessToken: string, newPassword: string) => {
     try {
-      // Use Supabase client directly to update password
-      // The session is automatically established when user clicks the recovery link
+      // First, set the session with the recovery token
+      const { error: sessionError } = await supabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: '', // Recovery tokens don't need refresh token
+      });
+
+      if (sessionError) {
+        console.error('Error setting session:', sessionError);
+        throw new Error(sessionError.message || 'Failed to establish session');
+      }
+
+      // Now update the password using the established session
       const { data, error } = await supabase.auth.updateUser({
         password: newPassword,
       });

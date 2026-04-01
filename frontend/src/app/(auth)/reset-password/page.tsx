@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense, useRef } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { supabase } from '@/lib/supabase';
 import { NeoCard } from '@/components/neobrutalism/neo-card';
@@ -19,122 +19,78 @@ function ResetPasswordForm() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [hasSession, setHasSession] = useState<boolean | null>(null);
-  const [debugInfo, setDebugInfo] = useState<string>('');
-  const hasRun = useRef(false);
+  const [isValidating, setIsValidating] = useState(true);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [isValid, setIsValid] = useState<boolean | null>(null);
 
   useEffect(() => {
-    // Prevent double execution in React Strict Mode
-    if (hasRun.current) return;
-    hasRun.current = true;
+    // Small delay to let any React Strict Mode cleanup finish
+    const timer = setTimeout(() => {
+      validateToken();
+    }, 100);
 
-    const processSession = async () => {
-      try {
-        // First check if we already have a session
-        console.log('Checking for existing session...');
-        const { data: { session: existingSession }, error: sessionError } = await supabase.auth.getSession();
-        
-        if (sessionError) {
-          console.error('Error getting session:', sessionError);
-          setDebugInfo(`Session error: ${sessionError.message}`);
-        }
-        
-        if (existingSession) {
-          console.log('Existing session found');
-          setHasSession(true);
-          return;
-        }
-
-        console.log('No existing session, checking URL hash...');
-        
-        // If no session, check for tokens in URL hash
-        const hash = window.location.hash;
-        console.log('URL hash:', hash ? 'present' : 'empty');
-        
-        if (hash && hash.includes('access_token')) {
-          // Parse the hash parameters
-          const hashParams = new URLSearchParams(hash.substring(1));
-          const accessToken = hashParams.get('access_token');
-          const refreshToken = hashParams.get('refresh_token');
-          const tokenType = hashParams.get('token_type');
-          const type = hashParams.get('type');
-          
-          console.log('Token details:', {
-            hasAccessToken: !!accessToken,
-            hasRefreshToken: !!refreshToken,
-            tokenType,
-            type,
-            accessTokenLength: accessToken?.length
-          });
-          
-          setDebugInfo(`Token found - Type: ${type}, TokenType: ${tokenType}, AccessToken length: ${accessToken?.length || 0}`);
-          
-          if (accessToken) {
-            // Try to validate the token first with getUser
-            console.log('Validating token with getUser...');
-            const { data: userData, error: userError } = await supabase.auth.getUser(accessToken);
-            
-            if (userError) {
-              console.error('Token validation error:', userError);
-              setDebugInfo(prev => `${prev}\nToken validation failed: ${userError.message}`);
-              setHasSession(false);
-              return;
-            }
-            
-            if (!userData.user) {
-              console.error('No user returned from token validation');
-              setDebugInfo(prev => `${prev}\nToken validation returned no user`);
-              setHasSession(false);
-              return;
-            }
-            
-            console.log('Token validated, user:', userData.user.email);
-            setDebugInfo(prev => `${prev}\nToken validated for user: ${userData.user.email}`);
-            
-            // Now try to set the session
-            console.log('Setting session with tokens...');
-            const { data, error } = await supabase.auth.setSession({
-              access_token: accessToken,
-              refresh_token: refreshToken || '',
-            });
-
-            if (error) {
-              console.error('Error setting session:', error);
-              setDebugInfo(prev => `${prev}\nsetSession error: ${error.message}`);
-              setHasSession(false);
-            } else if (data.session) {
-              console.log('Session set successfully');
-              setHasSession(true);
-              // Clear the hash from URL for security
-              window.history.replaceState(null, '', window.location.pathname);
-            } else {
-              console.error('No session returned from setSession');
-              setDebugInfo(prev => `${prev}\nNo session returned from setSession`);
-              setHasSession(false);
-            }
-            return;
-          }
-        } else {
-          console.log('No access_token found in hash');
-          setDebugInfo('No access_token found in URL hash');
-        }
-
-        // No hash tokens and no session
-        setHasSession(false);
-      } catch (error: any) {
-        // Handle AbortError specifically - it's usually from React Strict Mode
-        if (error.name === 'AbortError') {
-          console.log('Request was aborted (likely React Strict Mode), ignoring...');
-          return;
-        }
-        console.error('Session processing error:', error);
-        setDebugInfo(`Exception: ${error.message || error}`);
-        setHasSession(false);
-      }
-    };
-
-    processSession();
+    return () => clearTimeout(timer);
   }, []);
+
+  const validateToken = async () => {
+    try {
+      setIsValidating(true);
+      
+      // Extract token from URL hash
+      const hash = window.location.hash;
+      if (!hash || !hash.includes('access_token')) {
+        console.log('No access_token in URL hash');
+        setIsValid(false);
+        setIsValidating(false);
+        return;
+      }
+
+      // Parse hash parameters
+      const hashParams = new URLSearchParams(hash.substring(1));
+      const token = hashParams.get('access_token');
+      
+      if (!token) {
+        console.log('access_token is empty');
+        setIsValid(false);
+        setIsValidating(false);
+        return;
+      }
+
+      console.log('Found access_token, length:', token.length);
+
+      // Validate token with Supabase
+      const { data, error } = await supabase.auth.getUser(token);
+      
+      if (error) {
+        console.error('Token validation failed:', error.message);
+        setIsValid(false);
+        setIsValidating(false);
+        return;
+      }
+
+      if (!data.user) {
+        console.error('No user found for token');
+        setIsValid(false);
+        setIsValidating(false);
+        return;
+      }
+
+      console.log('Token validated for user:', data.user.email);
+      
+      // Token is valid, store it and show the form
+      setAccessToken(token);
+      setIsValid(true);
+      setIsValidating(false);
+      
+      // Clear hash from URL for security (but keep token in state)
+      window.history.replaceState(null, '', window.location.pathname);
+      
+    } catch (error: any) {
+      console.error('Validation error:', error);
+      setIsValid(false);
+      setIsValidating(false);
+    }
+  };
 
   const validatePassword = (password: string): string | null => {
     if (password.length < 8) {
@@ -157,6 +113,11 @@ function ResetPasswordForm() {
     setError('');
     setSuccess(false);
 
+    if (!accessToken) {
+      setError('Invalid or missing reset token');
+      return;
+    }
+
     // Validate new password
     const passwordError = validatePassword(newPassword);
     if (passwordError) {
@@ -173,10 +134,8 @@ function ResetPasswordForm() {
     setLoading(true);
 
     try {
-      await resetPassword('', newPassword);
+      await resetPassword(accessToken, newPassword);
       setSuccess(true);
-      // Clear the URL hash
-      window.history.replaceState(null, '', window.location.pathname);
     } catch (err: any) {
       setError(err.message || 'Failed to reset password');
     } finally {
@@ -184,22 +143,16 @@ function ResetPasswordForm() {
     }
   };
 
-  if (hasSession === null) {
-    // Still checking session
+  if (isValidating) {
     return (
       <div className="text-center py-4">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black mx-auto"></div>
         <p className="mt-2">Verifying reset link...</p>
-        {debugInfo && (
-          <pre className="mt-4 text-xs text-left bg-gray-100 p-2 rounded overflow-auto max-h-40">
-            {debugInfo}
-          </pre>
-        )}
       </div>
     );
   }
 
-  if (hasSession === false) {
+  if (!isValid) {
     return (
       <>
         <div className="border-2 border-black bg-[rgb(var(--neo-red))] p-4 mb-6 flex items-start gap-2">
@@ -211,12 +164,6 @@ function ResetPasswordForm() {
             </p>
           </div>
         </div>
-        {debugInfo && (
-          <div className="mb-4 p-3 bg-gray-100 rounded text-xs">
-            <p className="font-bold mb-1">Debug Info:</p>
-            <pre className="whitespace-pre-wrap break-all">{debugInfo}</pre>
-          </div>
-        )}
         <Link href="/forgot-password">
           <NeoButton variant="primary" className="w-full">
             Request New Reset Link
