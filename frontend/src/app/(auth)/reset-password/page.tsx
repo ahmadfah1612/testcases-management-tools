@@ -22,12 +22,54 @@ function ResetPasswordForm() {
   const [hasSession, setHasSession] = useState<boolean | null>(null);
 
   useEffect(() => {
-    // Check if user has a valid session (established when clicking recovery link)
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setHasSession(!!session);
+    const processSession = async () => {
+      try {
+        // First check if we already have a session
+        const { data: { session: existingSession } } = await supabase.auth.getSession();
+        
+        if (existingSession) {
+          setHasSession(true);
+          return;
+        }
+
+        // If no session, check for tokens in URL hash
+        const hash = window.location.hash;
+        if (hash && hash.includes('access_token')) {
+          // Parse the hash parameters
+          const hashParams = new URLSearchParams(hash.substring(1));
+          const accessToken = hashParams.get('access_token');
+          const refreshToken = hashParams.get('refresh_token');
+          
+          if (accessToken) {
+            // Explicitly set the session with the tokens from hash
+            const { data, error } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken || '',
+            });
+
+            if (error) {
+              console.error('Error setting session:', error);
+              setHasSession(false);
+            } else if (data.session) {
+              setHasSession(true);
+              // Clear the hash from URL for security
+              window.history.replaceState(null, '', window.location.pathname);
+            } else {
+              setHasSession(false);
+            }
+            return;
+          }
+        }
+
+        // No hash tokens and no session
+        setHasSession(false);
+      } catch (error) {
+        console.error('Session processing error:', error);
+        setHasSession(false);
+      }
     };
-    checkSession();
+
+    processSession();
   }, []);
 
   const validatePassword = (password: string): string | null => {
