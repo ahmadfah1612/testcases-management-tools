@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useAuth } from '@/lib/auth-context';
+import { supabase } from '@/lib/supabase';
 import { NeoCard } from '@/components/neobrutalism/neo-card';
 import { NeoInput } from '@/components/neobrutalism/neo-input';
 import { NeoButton } from '@/components/neobrutalism/neo-button';
@@ -85,6 +86,8 @@ function ResetPasswordForm() {
       setSuccess(true);
       // Clear the hash from URL for security
       window.history.replaceState(null, '', window.location.pathname);
+      // Sign out to clear the recovery session
+      await supabase.auth.signOut();
     } catch (err: any) {
       console.error('Reset password error:', err);
       setError(err.message || 'Failed to reset password. The link may have expired.');
