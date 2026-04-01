@@ -235,25 +235,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const resetPassword = async (accessToken: string, newPassword: string) => {
+  const resetPassword = async (_accessToken: string, newPassword: string) => {
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/auth/reset-password`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ accessToken, newPassword }),
-        }
-      );
+      // Use Supabase client directly to update password
+      // The session is automatically established when user clicks the recovery link
+      const { data, error } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
 
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to reset password');
+      if (error) {
+        console.error('Supabase update password error:', error);
+        throw new Error(error.message || 'Failed to reset password');
       }
 
-      return data;
-    } catch (error) {
+      return { message: 'Password has been reset successfully' };
+    } catch (error: any) {
       console.error('Reset password error:', error);
       throw error;
     }

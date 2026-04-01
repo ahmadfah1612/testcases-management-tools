@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
+import { supabase } from '@/lib/supabase';
 import { NeoCard } from '@/components/neobrutalism/neo-card';
 import { NeoInput } from '@/components/neobrutalism/neo-input';
 import { NeoButton } from '@/components/neobrutalism/neo-button';
@@ -10,8 +10,6 @@ import { AlertCircle, CheckCircle, Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
 
 function ResetPasswordForm() {
-  const searchParams = useSearchParams();
-  const router = useRouter();
   const { resetPassword } = useAuth();
 
   const [newPassword, setNewPassword] = useState('');
@@ -21,24 +19,16 @@ function ResetPasswordForm() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [hasSession, setHasSession] = useState<boolean | null>(null);
 
   useEffect(() => {
-    // Get access_token from URL hash (Supabase sends it as a hash fragment)
-    const hash = window.location.hash;
-    const hashParams = new URLSearchParams(hash.replace('#', '?'));
-    const token = hashParams.get('access_token');
-
-    if (token) {
-      setAccessToken(token);
-    } else {
-      // Also check query params as fallback
-      const queryToken = searchParams.get('token') || searchParams.get('access_token');
-      if (queryToken) {
-        setAccessToken(queryToken);
-      }
-    }
-  }, [searchParams]);
+    // Check if user has a valid session (established when clicking recovery link)
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setHasSession(!!session);
+    };
+    checkSession();
+  }, []);
 
   const validatePassword = (password: string): string | null => {
     if (password.length < 8) {
@@ -61,12 +51,6 @@ function ResetPasswordForm() {
     setError('');
     setSuccess(false);
 
-    // Check for access token
-    if (!accessToken) {
-      setError('Invalid or missing reset token. Please request a new password reset link.');
-      return;
-    }
-
     // Validate new password
     const passwordError = validatePassword(newPassword);
     if (passwordError) {
@@ -83,7 +67,7 @@ function ResetPasswordForm() {
     setLoading(true);
 
     try {
-      await resetPassword(accessToken, newPassword);
+      await resetPassword('', newPassword);
       setSuccess(true);
       // Clear the URL hash
       window.history.replaceState(null, '', window.location.pathname);
@@ -94,7 +78,17 @@ function ResetPasswordForm() {
     }
   };
 
-  if (!accessToken && !success) {
+  if (hasSession === null) {
+    // Still checking session
+    return (
+      <div className="text-center py-4">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black mx-auto"></div>
+        <p className="mt-2">Verifying reset link...</p>
+      </div>
+    );
+  }
+
+  if (hasSession === false) {
     return (
       <>
         <div className="border-2 border-black bg-[rgb(var(--neo-red))] p-4 mb-6 flex items-start gap-2">
