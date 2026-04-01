@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useRef } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { supabase } from '@/lib/supabase';
 import { NeoCard } from '@/components/neobrutalism/neo-card';
@@ -21,8 +21,13 @@ function ResetPasswordForm() {
   const [loading, setLoading] = useState(false);
   const [hasSession, setHasSession] = useState<boolean | null>(null);
   const [debugInfo, setDebugInfo] = useState<string>('');
+  const hasRun = useRef(false);
 
   useEffect(() => {
+    // Prevent double execution in React Strict Mode
+    if (hasRun.current) return;
+    hasRun.current = true;
+
     const processSession = async () => {
       try {
         // First check if we already have a session
@@ -117,6 +122,11 @@ function ResetPasswordForm() {
         // No hash tokens and no session
         setHasSession(false);
       } catch (error: any) {
+        // Handle AbortError specifically - it's usually from React Strict Mode
+        if (error.name === 'AbortError') {
+          console.log('Request was aborted (likely React Strict Mode), ignoring...');
+          return;
+        }
         console.error('Session processing error:', error);
         setDebugInfo(`Exception: ${error.message || error}`);
         setHasSession(false);
