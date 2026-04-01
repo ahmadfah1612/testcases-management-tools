@@ -317,9 +317,9 @@ export default function InvitationManagementPage() {
                     </td>
                     <td className="py-3 px-4">
                       {isExpired(code.expires_at) ? (
-                        <NeoBadge variant="red">Expired</NeoBadge>
+                        <NeoBadge variant="danger">Expired</NeoBadge>
                       ) : (
-                        <NeoBadge variant="green">Active</NeoBadge>
+                        <NeoBadge variant="success">Active</NeoBadge>
                       )}
                     </td>
                     <td className="py-3 px-4">
