@@ -139,16 +139,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (username: string, password: string) => {
     try {
+      console.log('Login attempt for username:', username);
+      
       // First, find the user by username to get the email
       const { data: userData, error: userError } = await supabase
         .from('users')
-        .select('email')
-        .eq('username', username)
+        .select('email, username')
+        .ilike('username', username)
         .single();
 
+      console.log('User lookup result:', { userData, userError });
+
       if (userError || !userData) {
+        console.error('User lookup failed:', userError);
         throw new Error('Invalid credentials');
       }
+
+      console.log('Found user email:', userData.email);
 
       // Sign in with Supabase Auth
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -156,15 +163,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         password,
       });
 
+      console.log('Supabase auth result:', { success: !!data.user, error: error?.message });
+
       if (error) {
-        throw new Error('Invalid credentials');
+        console.error('Supabase auth error:', error);
+        throw new Error(error.message || 'Invalid credentials');
       }
 
       if (data.user) {
         await fetchUser(data.user.id);
         router.push('/dashboard');
       }
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Login error:', error);
       throw error;
     }
   };
