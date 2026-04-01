@@ -141,6 +141,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       console.log('Login attempt for username:', username);
       
+      // Clear any existing session first (prevents stale session issues)
+      await supabase.auth.signOut();
+      console.log('Cleared any existing session');
+      
       // First, find the user by username to get the email
       const { data: userData, error: userError } = await supabase
         .from('users')
