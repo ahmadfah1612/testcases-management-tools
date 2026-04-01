@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { NeoCard } from '@/components/neobrutalism/neo-card';
 import { NeoInput } from '@/components/neobrutalism/neo-input';
@@ -18,21 +18,26 @@ function ResetPasswordForm() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [isChecking, setIsChecking] = useState(true);
 
-  // Extract token from URL hash synchronously (no async calls)
-  const getTokenFromUrl = (): string | null => {
-    if (typeof window === 'undefined') return null;
+  // Extract token from URL hash on mount
+  useEffect(() => {
+    console.log('Full URL:', window.location.href);
+    console.log('Hash:', window.location.hash);
     
     const hash = window.location.hash;
-    if (!hash || !hash.includes('access_token')) {
-      return null;
+    if (hash && hash.includes('access_token')) {
+      const hashParams = new URLSearchParams(hash.substring(1));
+      const token = hashParams.get('access_token');
+      console.log('Found token:', token ? 'Yes (length: ' + token.length + ')' : 'No');
+      setAccessToken(token);
+    } else {
+      console.log('No access_token in hash');
+      setAccessToken(null);
     }
-
-    const hashParams = new URLSearchParams(hash.substring(1));
-    return hashParams.get('access_token');
-  };
-
-  const accessToken = getTokenFromUrl();
+    setIsChecking(false);
+  }, []);
 
   const validatePassword = (password: string): string | null => {
     if (password.length < 8) {
@@ -88,7 +93,17 @@ function ResetPasswordForm() {
     }
   };
 
-  // If no token in URL, show error immediately
+  // Show loading while checking for token
+  if (isChecking) {
+    return (
+      <div className="text-center py-4">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black mx-auto"></div>
+        <p className="mt-2">Loading...</p>
+      </div>
+    );
+  }
+
+  // If no token in URL, show error
   if (!accessToken) {
     return (
       <>
