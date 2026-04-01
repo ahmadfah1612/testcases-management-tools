@@ -190,4 +190,96 @@ router.post('/verify', async (req, res) => {
   }
 });
 
+// Forgot Password - Send reset email via Supabase
+router.post('/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required' });
+    }
+
+    // Check if email exists in our users table
+    const { data: user, error: userError } = await supabase
+      .from('users')
+      .select('id, email')
+      .eq('email', email)
+      .single();
+
+    // Always return generic success message for security (don't reveal if email exists)
+    // But only send email if user exists
+    if (user && !userError) {
+      // Send password reset email via Supabase
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password`,
+      });
+
+      if (error) {
+        console.error('Supabase reset password error:', error);
+        // Don't expose error details to client
+      }
+    }
+
+    // Generic response regardless of whether email was sent
+    res.json({ 
+      message: 'If an account with that email exists, a password reset link has been sent.' 
+    });
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    // Still return generic success message on error
+    res.json({ 
+      message: 'If an account with that email exists, a password reset link has been sent.' 
+    });
+  }
+});
+
+// Reset Password - Update password with token from Supabase
+router.post('/reset-password', async (req, res) => {
+  try {
+    const { accessToken, newPassword } = req.body;
+
+    if (!accessToken || !newPassword) {
+      return res.status(400).json({ error: 'Access token and new password are required' });
+    }
+
+    // Validate password strength
+    if (newPassword.length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters long' });
+    }
+
+    // Create a new Supabase client with the access token
+    const { createClient } = await import('@supabase/supabase-js');
+    const supabaseUrl = process.env.SUPABASE_URL || '';
+    
+    const supabaseWithToken = createClient(supabaseUrl, process.env.SUPABASE_ANON_KEY || '', {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+      global: {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      },
+    });
+
+    // Update password using the authenticated client
+    const { data, error } = await supabaseWithToken.auth.updateUser({
+      password: newPassword,
+    });
+
+    if (error) {
+      console.error('Supabase update password error:', error);
+      return res.status(400).json({ 
+        error: 'Invalid or expired token. Please request a new password reset.' 
+      });
+    }
+
+    res.json({ message: 'Password has been reset successfully' });
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({ error: 'Failed to reset password' });
+  }
+});
+
 export default router;

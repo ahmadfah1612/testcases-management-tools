@@ -20,6 +20,8 @@ interface AuthContextType {
   register: (username: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   isAdmin: () => boolean;
+  forgotPassword: (email: string) => Promise<{ message: string }>;
+  resetPassword: (accessToken: string, newPassword: string) => Promise<{ message: string }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -214,8 +216,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return user?.role === 'admin';
   };
 
+  const forgotPassword = async (email: string) => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/auth/forgot-password`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
+        }
+      );
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Forgot password error:', error);
+      throw new Error('Failed to send reset email');
+    }
+  };
+
+  const resetPassword = async (accessToken: string, newPassword: string) => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/auth/reset-password`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ accessToken, newPassword }),
+        }
+      );
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to reset password');
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Reset password error:', error);
+      throw error;
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, isAdmin }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, isAdmin, forgotPassword, resetPassword }}>
       {children}
     </AuthContext.Provider>
   );
