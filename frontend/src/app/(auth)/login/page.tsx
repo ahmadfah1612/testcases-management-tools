@@ -58,7 +58,15 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label className="block font-bold uppercase mb-2">Password</label>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block font-bold uppercase">Password</label>
+              <a
+                href="/forgot-password"
+                className="text-sm font-bold underline hover:no-underline"
+              >
+                Forgot Password?
+              </a>
+            </div>
             <NeoInput
               type="password"
               value={password}
