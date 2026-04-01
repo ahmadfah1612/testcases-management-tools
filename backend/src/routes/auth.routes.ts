@@ -8,10 +8,26 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-this';
 // Register - Creates Supabase Auth user and custom user record
 router.post('/register', async (req, res) => {
   try {
-    const { username, email, password } = req.body;
+    const { username, email, password, invitationCode } = req.body;
 
     if (!username || !email || !password) {
       return res.status(400).json({ error: 'Username, email, and password are required' });
+    }
+
+    // Validate invitation code
+    if (!invitationCode) {
+      return res.status(400).json({ error: 'Invitation code is required' });
+    }
+
+    const { data: validCode, error: codeError } = await supabase
+      .from('invitation_codes')
+      .select('id')
+      .eq('code', invitationCode.toUpperCase())
+      .gt('expires_at', new Date().toISOString())
+      .single();
+
+    if (codeError || !validCode) {
+      return res.status(400).json({ error: 'Invalid or expired invitation code' });
     }
 
     // Check if username already exists in our users table
@@ -68,6 +84,20 @@ router.post('/register', async (req, res) => {
 
     if (fetchError) {
       console.error('Error fetching user data:', fetchError);
+    }
+
+    // Record invitation code usage
+    if (userData && validCode) {
+      const { error: usageError } = await supabase
+        .from('invitation_code_usage')
+        .insert({
+          code_id: validCode.id,
+          user_id: userData.id
+        });
+
+      if (usageError) {
+        console.error('Error recording invitation code usage:', usageError);
+      }
     }
 
     // Generate JWT token for our app

@@ -13,7 +13,8 @@ import {
   BarChart3, 
   Calendar,
   LogOut,
-  Users
+  Users,
+  Ticket
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -59,7 +60,10 @@ export default function DashboardLayout({
     { href: '/dashboard/test-runs', label: 'Test Runs', icon: PlayCircle },
     { href: '/dashboard/reports', label: 'Reports', icon: BarChart3 },
     { href: '/dashboard/schedules', label: 'Schedules', icon: Calendar },
-    ...(isAdmin() ? [{ href: '/dashboard/users', label: 'Users', icon: Users }] : []),
+    ...(isAdmin() ? [
+      { href: '/dashboard/users', label: 'Users', icon: Users },
+      { href: '/dashboard/admin/invitations', label: 'Invitations', icon: Ticket }
+    ] : []),
   ];
 
   return (

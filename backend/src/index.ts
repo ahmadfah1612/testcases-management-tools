@@ -5,6 +5,7 @@ dotenv.config();
 import express from 'express';
 import cors from 'cors';
 import authRoutes from './routes/auth.routes';
+import invitationRoutes from './routes/invitation.routes';
 import testSuitesRoutes from './routes/testsuites.routes';
 import testCasesRoutes from './routes/testcases.routes';
 import testPlansRoutes from './routes/testplans.routes';
@@ -32,6 +33,7 @@ app.use((req, res, next) => {
 });
 
 app.use('/api/auth', authRoutes);
+app.use('/api/invitation', invitationRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/debug', debugRoutes);
 app.use('/api/testsuites', testSuitesRoutes);

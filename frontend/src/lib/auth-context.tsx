@@ -17,7 +17,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (username: string, password: string) => Promise<void>;
-  register: (username: string, email: string, password: string) => Promise<void>;
+  register: (username: string, email: string, password: string, invitationCode: string) => Promise<void>;
   logout: () => Promise<void>;
   isAdmin: () => boolean;
   forgotPassword: (email: string) => Promise<{ message: string }>;
@@ -184,37 +184,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const register = async (username: string, email: string, password: string) => {
+  const register = async (username: string, email: string, password: string, invitationCode: string) => {
     try {
-      // Sign up with Supabase Auth
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            username
-          }
+      // Call backend API for registration (which validates invitation code)
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/auth/register`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, email, password, invitationCode }),
         }
-      });
+      );
 
-      if (error) {
-        throw new Error(error.message || 'Registration failed');
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Registration failed');
       }
 
-      if (data.user) {
-        // Wait for trigger to create user record
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        // Update username in custom users table
-        await supabase
-          .from('users')
-          .update({ username })
-          .eq('auth_id', data.user.id);
-
-        await fetchUser(data.user.id);
+      // Store the token and user data
+      if (data.token) {
+        // Set user data from response
+        setUser(data.user);
         router.push('/dashboard');
       }
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Registration error:', error);
       throw error;
     }
   };

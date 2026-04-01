@@ -6,13 +6,14 @@ import { useAuth } from '@/lib/auth-context';
 import { NeoCard } from '@/components/neobrutalism/neo-card';
 import { NeoInput } from '@/components/neobrutalism/neo-input';
 import { NeoButton } from '@/components/neobrutalism/neo-button';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Info } from 'lucide-react';
 
 export default function RegisterPage() {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [invitationCode, setInvitationCode] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { register } = useAuth();
@@ -32,17 +33,30 @@ export default function RegisterPage() {
       return;
     }
 
+    if (!invitationCode.trim()) {
+      setError('Invitation code is required');
+      return;
+    }
+
     setLoading(true);
 
     try {
-      await register(username, email, password);
+      await register(username, email, password, invitationCode);
       router.push('/dashboard');
-    } catch (err) {
-      setError('Username or email already exists');
+    } catch (err: any) {
+      setError(err.message || 'Username or email already exists');
     } finally {
       setLoading(false);
     }
   };
+
+  // Check if all required fields are filled
+  const isFormValid = 
+    username.trim() && 
+    email.trim() && 
+    password.length >= 6 && 
+    confirmPassword === password &&
+    invitationCode.trim();
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[rgb(var(--neo-blue))] p-4">
@@ -58,6 +72,22 @@ export default function RegisterPage() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block font-bold uppercase mb-2">Invitation Code</label>
+            <NeoInput
+              type="text"
+              value={invitationCode}
+              onChange={(e) => setInvitationCode(e.target.value)}
+              placeholder="Enter invitation code"
+              required
+              className="w-full"
+            />
+            <div className="flex items-start gap-2 mt-2 text-sm text-gray-600">
+              <Info className="w-4 h-4 mt-0.5 flex-shrink-0" />
+              <p>You need a valid invitation code to register. Contact an admin to get one.</p>
+            </div>
+          </div>
+
           <div>
             <label className="block font-bold uppercase mb-2">Username</label>
             <NeoInput
@@ -106,7 +136,12 @@ export default function RegisterPage() {
             />
           </div>
 
-          <NeoButton type="submit" variant="primary" className="w-full" disabled={loading}>
+          <NeoButton 
+            type="submit" 
+            variant="primary" 
+            className="w-full" 
+            disabled={loading || !isFormValid}
+          >
             {loading ? 'Creating account...' : 'Register'}
           </NeoButton>
         </form>
