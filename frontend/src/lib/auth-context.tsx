@@ -237,19 +237,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const resetPassword = async (accessToken: string, newPassword: string) => {
     try {
-      // First, set the session with the recovery token
-      const { error: sessionError } = await supabase.auth.setSession({
-        access_token: accessToken,
-        refresh_token: '', // Recovery tokens don't need refresh token
+      // Create a new Supabase client with the recovery token
+      // This is the correct way to use a recovery token
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+      
+      const supabaseWithToken = createClient(supabaseUrl, supabaseKey, {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
+        },
+        global: {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        },
       });
 
-      if (sessionError) {
-        console.error('Error setting session:', sessionError);
-        throw new Error(sessionError.message || 'Failed to establish session');
-      }
-
-      // Now update the password using the established session
-      const { data, error } = await supabase.auth.updateUser({
+      // Update password using the authenticated client
+      const { data, error } = await supabaseWithToken.auth.updateUser({
         password: newPassword,
       });
 
