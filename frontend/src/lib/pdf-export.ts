@@ -53,7 +53,7 @@ export async function exportReportToPDF(
   try {
     toast.info('Generating PDF with charts...', { id: 'pdf-export' });
 
-    const html2canvas = (await import('html2canvas')).default;
+    const { toPng } = await import('html-to-image');
     const { jsPDF } = await import('jspdf');
     const autoTable = (await import('jspdf-autotable')).default;
 
@@ -87,10 +87,9 @@ export async function exportReportToPDF(
     const captureAndAdd = async (elementId: string, title?: string) => {
       const el = document.getElementById(elementId);
       if (el) {
-        const canvas = await html2canvas(el, { scale: 1.5, useCORS: true, logging: false });
-        const imgData = canvas.toDataURL('image/png');
+        const dataUrl = await toPng(el, { backgroundColor: '#ffffff', pixelRatio: 1.5 });
         const imgWidth = pageWidth - 28;
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        const imgHeight = (el.offsetHeight * imgWidth) / el.offsetWidth;
         
         if (y + imgHeight > 280) {
           doc.addPage();
@@ -104,7 +103,7 @@ export async function exportReportToPDF(
           y += 5;
         }
 
-        doc.addImage(imgData, 'PNG', 14, y, imgWidth, imgHeight);
+        doc.addImage(dataUrl, 'PNG', 14, y, imgWidth, imgHeight);
         y += imgHeight + 10;
       }
     };
@@ -184,7 +183,7 @@ export async function exportTestRunToPDF(testRunBasic: TestRunData) {
 
     toast.info('Generating PDF report...', { id: 'pdf-export' });
 
-    const html2canvas = (await import('html2canvas')).default;
+    const { toPng } = await import('html-to-image');
     const { jsPDF } = await import('jspdf');
     const autoTable = (await import('jspdf-autotable')).default;
 
@@ -253,13 +252,12 @@ export async function exportTestRunToPDF(testRunBasic: TestRunData) {
       doc.text('DISTRIBUTION CHART', 14, y);
       y += 5;
       
-      const canvas = await html2canvas(chartEl, { scale: 1.5, backgroundColor: '#ffffff', logging: false });
-      const imgData = canvas.toDataURL('image/png');
+      const dataUrl = await toPng(chartEl, { backgroundColor: '#ffffff', pixelRatio: 1.5 });
       const imgWidth = pageWidth - 28;
       // to keep aspect ratio
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      const imgHeight = (chartEl.offsetHeight * imgWidth) / chartEl.offsetWidth;
 
-      doc.addImage(imgData, 'PNG', 14, y, imgWidth, imgHeight);
+      doc.addImage(dataUrl, 'PNG', 14, y, imgWidth, imgHeight);
       y += imgHeight + 10;
     }
 
