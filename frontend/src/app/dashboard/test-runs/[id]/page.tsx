@@ -6,8 +6,9 @@ import { api } from '@/lib/api';
 import { NeoCard } from '@/components/neobrutalism/neo-card';
 import { NeoButton } from '@/components/neobrutalism/neo-button';
 import { NeoInput } from '@/components/neobrutalism/neo-input';
-import { ArrowLeft, CheckCircle, XCircle, SkipForward, Save } from 'lucide-react';
+import { ArrowLeft, CheckCircle, XCircle, SkipForward, Save, Download } from 'lucide-react';
 import { toast } from 'sonner';
+import { exportTestRunToPDF } from '@/lib/pdf-export';
 
 interface TestCase {
   id: string;
@@ -55,7 +56,7 @@ export default function TestRunDetailPage() {
   const router = useRouter();
   const params = useParams();
   const runId = params.id as string;
-  
+
   const [testRun, setTestRun] = useState<TestRun | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<{ [resultId: string]: boolean }>({});
@@ -75,14 +76,14 @@ export default function TestRunDetailPage() {
     try {
       const resultsOffset = (resultsPage - 1) * resultsLimit;
       const data = await api.get(`/testruns/${runId}?page=${resultsPage}&limit=${resultsLimit}&resultsOffset=${resultsOffset}`);
-      
+
       setTestRun(data);
-      
+
       setDraftResults(prev => {
         if (preserveDrafts && Object.keys(prev).length > 0) {
           return prev;
         }
-        
+
         const drafts: DraftResults = {};
         data.results.forEach((result: TestResult) => {
           drafts[result.id] = {
@@ -111,7 +112,7 @@ export default function TestRunDetailPage() {
         ...currentDraft,
         [field]: value
       };
-      
+
       return {
         ...prev,
         [resultId]: newDraft
@@ -125,7 +126,7 @@ export default function TestRunDetailPage() {
       toast.error('Please make changes before saving');
       return;
     }
-    
+
     try {
       setSaving((prev) => ({ ...prev, [result.id]: true }));
       const response = await api.post(`/testruns/${runId}/results`, {
@@ -133,7 +134,7 @@ export default function TestRunDetailPage() {
         status: draft.status,
         notes: draft.notes
       });
-      
+
       if (response.data) {
         setDraftResults(prev => ({
           ...prev,
@@ -142,10 +143,10 @@ export default function TestRunDetailPage() {
             notes: response.data.notes || draft.notes
           }
         }));
-        
+
         setTestRun(prev => prev ? {
           ...prev,
-          results: prev.results.map(r => 
+          results: prev.results.map(r =>
             r.id === result.id ? {
               ...r,
               status: response.data.status || draft.status,
@@ -154,7 +155,7 @@ export default function TestRunDetailPage() {
           )
         } : null);
       }
-      
+
       toast.success('Test result saved successfully');
     } catch (error: any) {
       toast.error(error.message || 'Failed to save test result');
@@ -165,7 +166,7 @@ export default function TestRunDetailPage() {
 
   const handleCompleteRun = async () => {
     if (!testRun) return;
-    
+
     try {
       await api.put(`/testruns/${runId}`, { status: 'COMPLETED' });
       toast.success('Test run completed successfully');
@@ -246,7 +247,7 @@ export default function TestRunDetailPage() {
   const failed = testRun.results.filter(r => r.status === 'FAIL').length;
   const skipped = testRun.results.filter(r => r.status === 'SKIP').length;
   const total = passed + failed + skipped;
-  
+
   const passedPercent = total > 0 ? Math.round((passed / total) * 100) : 0;
   const failedPercent = total > 0 ? Math.round((failed / total) * 100) : 0;
   const skippedPercent = total > 0 ? Math.round((skipped / total) * 100) : 0;
@@ -268,16 +269,26 @@ export default function TestRunDetailPage() {
             <p className="text-gray-600">{testRun.testPlan.name}</p>
           </div>
         </div>
-        {testRun.status !== 'COMPLETED' && (
+        <div className="flex items-center gap-3">
           <NeoButton
             variant="primary"
-            onClick={handleCompleteRun}
+            onClick={() => exportTestRunToPDF(testRun)}
             className="flex items-center gap-2"
           >
-            <Save className="w-4 h-4" />
-            Complete Run
+            <Download className="w-4 h-4" />
+            Export PDF
           </NeoButton>
-        )}
+          {testRun.status !== 'COMPLETED' && (
+            <NeoButton
+              variant="warning"
+              onClick={handleCompleteRun}
+              className="flex items-center gap-2"
+            >
+              <Save className="w-4 h-4" />
+              Complete Run
+            </NeoButton>
+          )}
+        </div>
       </div>
 
       <NeoCard>
@@ -307,7 +318,7 @@ export default function TestRunDetailPage() {
         {total > 0 && (
           <div className="mt-6">
             <h3 className="text-lg font-bold uppercase mb-4">Test Results Distribution</h3>
-            <div className="flex items-center justify-center gap-8">
+            <div className="flex items-center justify-center gap-8" id="test-run-distribution-chart">
               <div className="relative">
                 <svg width="200" height="200" viewBox="0 0 200 200">
                   <circle
@@ -400,9 +411,8 @@ export default function TestRunDetailPage() {
                 <p className="text-sm text-gray-600">{result.testCase.description}</p>
               </div>
               <div className="flex-shrink-0">
-                <div className={`w-6 h-6 border-2 border-black flex items-center justify-center bg-white transition-all ${
-                  expandedResults.has(result.id) ? 'rotate-90' : ''
-                }`}>
+                <div className={`w-6 h-6 border-2 border-black flex items-center justify-center bg-white transition-all ${expandedResults.has(result.id) ? 'rotate-90' : ''
+                  }`}>
                   ▶
                 </div>
               </div>

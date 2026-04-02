@@ -5,8 +5,9 @@ import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { NeoCard } from '@/components/neobrutalism/neo-card';
 import { NeoButton } from '@/components/neobrutalism/neo-button';
-import { Activity, TrendingUp, TrendingDown, FileText, Calendar } from 'lucide-react';
+import { Activity, TrendingUp, TrendingDown, FileText, Calendar, Download } from 'lucide-react';
 import { toast } from 'sonner';
+import { exportReportToPDF } from '@/lib/pdf-export';
 
 interface Stats {
   totalCases: number;
@@ -44,7 +45,7 @@ export default function ReportsPage() {
         api.get('/reports/stats'),
         api.get(`/reports/trends?period=${period}`)
       ]);
-      
+
       setStats(statsData);
       setTrends(trendsData);
     } catch (error) {
@@ -96,13 +97,23 @@ export default function ReportsPage() {
           <h1 className="text-4xl font-bold uppercase">Reports</h1>
           <p className="text-gray-600">View test execution statistics and trends</p>
         </div>
-        <NeoButton
-          variant="secondary"
-          onClick={() => router.push('/dashboard')}
-          className="flex items-center gap-2"
-        >
-          Back
-        </NeoButton>
+        <div className="flex items-center gap-3">
+          <NeoButton
+            variant="primary"
+            onClick={() => exportReportToPDF(stats, trends, period)}
+            className="flex items-center gap-2"
+          >
+            <Download className="w-4 h-4" />
+            Export PDF
+          </NeoButton>
+          <NeoButton
+            variant="secondary"
+            onClick={() => router.push('/dashboard')}
+            className="flex items-center gap-2"
+          >
+            Back
+          </NeoButton>
+        </div>
       </div>
 
       <NeoCard>
@@ -120,7 +131,7 @@ export default function ReportsPage() {
         </div>
       </NeoCard>
 
-      <NeoCard>
+      <NeoCard id="reports-stats">
         <h2 className="text-2xl font-bold uppercase mb-4">Overview Statistics</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           <div className="border-4 border-black bg-white p-4 hover:shadow-[2px_2px_0px_rgba(0,0,0,1)] transition-all">
@@ -165,7 +176,7 @@ export default function ReportsPage() {
         </div>
       </NeoCard>
 
-      <NeoCard>
+      <NeoCard id="reports-trends">
         <h2 className="text-2xl font-bold uppercase mb-4">Test Results Trends</h2>
         <p className="text-sm text-gray-600 mb-6">
           Distribution of test results over the last {period} days
