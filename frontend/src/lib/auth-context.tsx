@@ -83,7 +83,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [user]);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    // 1. getSession() handles initial load (reads from localStorage, refreshes token if needed)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        fetchUser(session.user.id);
+      } else {
+        setLoading(false);
+      }
+    });
+
+    // 2. onAuthStateChange handles subsequent events (login, logout, token refresh)
+    //    Skip INITIAL_SESSION since getSession() above already covers it — this prevents the race condition.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'INITIAL_SESSION') return;
+
       if (session?.user) {
         await fetchUser(session.user.id);
         resetInactivityTimer();
