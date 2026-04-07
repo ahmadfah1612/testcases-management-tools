@@ -48,7 +48,7 @@ function setCachedUser(user: User | null) {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUserState] = useState<User | null>(getCachedUser);
+  const [user, setUserState] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Wrapper that keeps localStorage in sync
@@ -56,6 +56,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUserState(u);
     setCachedUser(u);
   };
+
+  // Restore cached user on client mount (avoids SSR hydration mismatch)
+  useEffect(() => {
+    const cached = getCachedUser();
+    if (cached) setUserState(cached);
+  }, []);
   const router = useRouter();
   const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null);
   const warningTimerRef = useRef<NodeJS.Timeout | null>(null);
