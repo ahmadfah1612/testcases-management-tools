@@ -24,11 +24,38 @@ interface AuthContextType {
   resetPassword: (accessToken: string, newPassword: string) => Promise<{ message: string }>;
 }
 
+const AUTH_USER_KEY = 'app_user';
+
+function getCachedUser(): User | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(AUTH_USER_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function setCachedUser(user: User | null) {
+  if (typeof window === 'undefined') return;
+  if (user) {
+    localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
+  } else {
+    localStorage.removeItem(AUTH_USER_KEY);
+  }
+}
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUserState] = useState<User | null>(getCachedUser);
+  const [loading, setLoading] = useState(!getCachedUser());
+
+  // Wrapper that keeps localStorage in sync
+  const setUser = (u: User | null) => {
+    setUserState(u);
+    setCachedUser(u);
+  };
   const router = useRouter();
   const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null);
   const warningTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -83,39 +110,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [user]);
 
   useEffect(() => {
-    // 1. getSession() handles initial load (reads from localStorage, refreshes token if needed)
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        fetchUser(session.user.id);
-      } else {
-        setLoading(false);
-      }
-    });
-
-    // 2. onAuthStateChange handles subsequent events (login, logout, token refresh)
-    //    Skip INITIAL_SESSION since getSession() above already covers it — this prevents the race condition.
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'INITIAL_SESSION') return;
-
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
         await fetchUser(session.user.id);
         resetInactivityTimer();
       } else {
         setUser(null);
         setLoading(false);
-        if (inactivityTimerRef.current) {
-          clearTimeout(inactivityTimerRef.current);
-        }
-        if (warningTimerRef.current) {
-          clearTimeout(warningTimerRef.current);
-        }
+        if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current);
+        if (warningTimerRef.current) clearTimeout(warningTimerRef.current);
       }
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  const fetchUser = async (authId: string, retryCount = 0) => {
+  const fetchUser = async (authId: string) => {
     try {
       const { data: userData, error } = await supabase
         .from('users')
@@ -125,11 +135,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) {
         console.error('Error fetching user:', error);
-        // Retry once after a short delay — the session/RLS may not be ready yet
-        if (retryCount < 1) {
-          await new Promise(r => setTimeout(r, 1000));
-          return fetchUser(authId, retryCount + 1);
-        }
+        // Don't clear user — the cached value keeps the session alive
       } else if (userData) {
         setUser(userData);
       }
