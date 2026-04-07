@@ -49,7 +49,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUserState] = useState<User | null>(getCachedUser);
-  const [loading, setLoading] = useState(!getCachedUser());
+  const [loading, setLoading] = useState(true);
 
   // Wrapper that keeps localStorage in sync
   const setUser = (u: User | null) => {
