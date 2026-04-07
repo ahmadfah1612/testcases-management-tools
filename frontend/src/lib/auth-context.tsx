@@ -83,12 +83,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [user]);
 
   useEffect(() => {
+    // Fallback: check session once on mount in case onAuthStateChange is delayed
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        fetchUser(session.user.id);
+      } else {
+        setUser(null);
+        setLoading(false);
+      }
+    });
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
         await fetchUser(session.user.id);
         resetInactivityTimer();
       } else {
         setUser(null);
+        setLoading(false);
         if (inactivityTimerRef.current) {
           clearTimeout(inactivityTimerRef.current);
         }
@@ -96,7 +107,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           clearTimeout(warningTimerRef.current);
         }
       }
-      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
@@ -104,11 +114,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const fetchUser = async (authId: string) => {
     try {
-      const { data: userData, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('auth_id', authId)
-        .single();
+      const timeout = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('fetchUser timeout')), 5000)
+      );
+      const query = supabase.from('users').select('*').eq('auth_id', authId).single();
+      const { data: userData, error } = await Promise.race([query, timeout]);
 
       if (error) {
         console.error('Error fetching user:', error);
