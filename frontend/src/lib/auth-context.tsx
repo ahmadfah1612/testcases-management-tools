@@ -83,8 +83,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [user]);
 
   useEffect(() => {
-    checkUser();
-    
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
         await fetchUser(session.user.id);
@@ -103,15 +101,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return () => subscription.unsubscribe();
   }, []);
-
-  const checkUser = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session?.user) {
-      await fetchUser(session.user.id);
-    } else {
-      setLoading(false);
-    }
-  };
 
   const fetchUser = async (authId: string) => {
     try {
