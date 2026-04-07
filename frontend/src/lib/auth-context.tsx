@@ -83,16 +83,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [user]);
 
   useEffect(() => {
-    // Fallback: check session once on mount in case onAuthStateChange is delayed
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        fetchUser(session.user.id);
-      } else {
-        setUser(null);
-        setLoading(false);
-      }
-    });
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
         await fetchUser(session.user.id);
@@ -130,7 +120,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error) {
       console.error('Error fetching user:', error);
-      setUser(null);
     } finally {
       setLoading(false);
     }
