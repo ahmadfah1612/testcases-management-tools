@@ -5,8 +5,10 @@ import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { NeoCard } from '@/components/neobrutalism/neo-card';
 import { NeoButton } from '@/components/neobrutalism/neo-button';
-import { FolderOpen, Plus, Edit2, Trash2, MoreVertical } from 'lucide-react';
+import { FolderOpen, Plus, Edit2, Trash2, Download, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
+import Papa from 'papaparse';
+import * as XLSX from 'xlsx';
 
 interface TestSuite {
   id: string;
@@ -29,10 +31,56 @@ export default function TestSuitesPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const limit = 10;
+  const [exportOpenId, setExportOpenId] = useState<string | null>(null);
+  const [exportingId, setExportingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchSuites();
   }, [page]);
+
+  useEffect(() => {
+    if (!exportOpenId) return;
+    const handler = () => setExportOpenId(null);
+    window.addEventListener('click', handler);
+    return () => window.removeEventListener('click', handler);
+  }, [exportOpenId]);
+
+  const downloadBlob = (blob: Blob, filename: string) => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExport = async (suite: TestSuite, format: 'csv' | 'excel') => {
+    setExportingId(suite.id);
+    setExportOpenId(null);
+    try {
+      const data = await api.get(`/testcases/export?suiteId=${suite.id}`);
+      const rows: any[] = data.data || [];
+      if (rows.length === 0) {
+        toast.info(`No test cases in "${suite.name}"`);
+        return;
+      }
+      const safeName = suite.name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+      if (format === 'csv') {
+        const csv = Papa.unparse(rows);
+        downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8;' }), `${safeName}-testcases.csv`);
+      } else {
+        const ws = XLSX.utils.json_to_sheet(rows);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Test Cases');
+        XLSX.writeFile(wb, `${safeName}-testcases.xlsx`);
+      }
+      toast.success(`Exported ${rows.length} test cases from "${suite.name}"`);
+    } catch {
+      toast.error('Export failed');
+    } finally {
+      setExportingId(null);
+    }
+  };
 
   const fetchSuites = async () => {
     try {
@@ -118,6 +166,33 @@ export default function TestSuitesPage() {
                     >
                       <Edit2 className="w-4 h-4" />
                     </NeoButton>
+                    <div className="relative" onClick={e => e.stopPropagation()}>
+                      <NeoButton
+                        variant="secondary"
+                        onClick={() => setExportOpenId(id => id === suite.id ? null : suite.id)}
+                        disabled={exportingId === suite.id}
+                        className="px-2 py-1 flex items-center gap-1"
+                      >
+                        <Download className="w-4 h-4" />
+                        <ChevronDown className="w-3 h-3" />
+                      </NeoButton>
+                      {exportOpenId === suite.id && (
+                        <div className="absolute right-0 top-full mt-1 z-20 bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] min-w-[160px]">
+                          <button
+                            onClick={() => handleExport(suite, 'csv')}
+                            className="w-full text-left px-4 py-2 font-bold uppercase hover:bg-gray-100 border-b-2 border-black text-xs"
+                          >
+                            Export as CSV
+                          </button>
+                          <button
+                            onClick={() => handleExport(suite, 'excel')}
+                            className="w-full text-left px-4 py-2 font-bold uppercase hover:bg-gray-100 text-xs"
+                          >
+                            Export as Excel
+                          </button>
+                        </div>
+                      )}
+                    </div>
                     <NeoButton
                       variant="danger"
                       onClick={() => setDeleteModal({ id: suite.id, name: suite.name })}

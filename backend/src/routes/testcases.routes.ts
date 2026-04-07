@@ -71,7 +71,9 @@ router.get('/', async (req: AuthRequest, res) => {
 
 router.get('/export', async (req: AuthRequest, res) => {
   try {
-    const { data: testCases, error } = await supabase
+    const { suiteId } = req.query;
+
+    let query = supabase
       .from('test_cases')
       .select(`
         *,
@@ -82,6 +84,12 @@ router.get('/export', async (req: AuthRequest, res) => {
       `)
       .eq('created_by', req.dbUserId!)
       .order('created_at', { ascending: false });
+
+    if (suiteId) {
+      query = query.eq('suite_id', suiteId as string);
+    }
+
+    const { data: testCases, error } = await query;
 
     if (error) {
       return res.status(500).json({ error: 'Failed to fetch test cases' });
