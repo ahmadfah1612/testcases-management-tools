@@ -62,6 +62,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const cached = getCachedUser();
     if (cached) setUserState(cached);
   }, []);
+
   const router = useRouter();
   const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null);
   const warningTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -115,8 +116,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [user]);
 
+  const fetchUser = async (authId: string) => {
+    try {
+      const { data: userData, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('auth_id', authId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching user:', error);
+      } else if (userData) {
+        setUser(userData);
+      }
+    } catch (error) {
+      console.error('Error fetching user:', error);
+    }
+  };
+
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    let mounted = true;
+
+    // Sequential init — getSession then fetchUser, guaranteed to set loading=false
+    const initAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!mounted) return;
+
+        if (session?.user) {
+          await fetchUser(session.user.id);
+        }
+      } catch (err) {
+        console.error('Auth init error:', err);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    initAuth();
+
+    // Listen for subsequent auth changes (login, logout, token refresh)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'INITIAL_SESSION') return; // Already handled by initAuth
+      if (!mounted) return;
+
       if (session?.user) {
         await fetchUser(session.user.id);
         resetInactivityTimer();
@@ -128,29 +171,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
-
-  const fetchUser = async (authId: string) => {
-    try {
-      const { data: userData, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('auth_id', authId)
-        .single();
-
-      if (error) {
-        console.error('Error fetching user:', error);
-        // Don't clear user — the cached value keeps the session alive
-      } else if (userData) {
-        setUser(userData);
-      }
-    } catch (error) {
-      console.error('Error fetching user:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const login = async (username: string, password: string) => {
     try {
