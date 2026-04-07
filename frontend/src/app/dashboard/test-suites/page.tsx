@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { NeoCard } from '@/components/neobrutalism/neo-card';
 import { NeoButton } from '@/components/neobrutalism/neo-button';
-import { FolderOpen, Plus, Edit2, Trash2, Download, ChevronDown } from 'lucide-react';
+import { FolderOpen, Plus, Edit2, Trash2, Download, ChevronDown, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
@@ -16,6 +16,8 @@ interface TestSuite {
   description: string | null;
   createdAt: string;
   updatedAt: string;
+  isOwner?: boolean;
+  collaborationRole?: string;
   _count: {
     testCases: number;
   };
@@ -155,6 +157,12 @@ export default function TestSuitesPage() {
                   <FolderOpen className="w-6 h-6" />
                 </div>
                 <div className="flex items-center gap-2">
+                  {!suite.isOwner && suite.collaborationRole && (
+                    <span className="flex items-center gap-1 px-2 py-1 border-2 border-black bg-[rgb(0,191,255)] font-bold text-xs uppercase">
+                      <Users className="w-3 h-3" />
+                      Shared
+                    </span>
+                  )}
                   <div className="border-2 border-black px-3 py-1 font-bold text-sm">
                     {suite._count.testCases} cases
                   </div>

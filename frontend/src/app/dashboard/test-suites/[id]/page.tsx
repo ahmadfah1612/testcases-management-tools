@@ -7,7 +7,8 @@ import { NeoCard } from '@/components/neobrutalism/neo-card';
 import { NeoButton } from '@/components/neobrutalism/neo-button';
 import { NeoInput } from '@/components/neobrutalism/neo-input';
 import { toast } from 'sonner';
-import { ArrowLeft, FolderOpen, FileText, Plus, Edit2, Trash2, ChevronDown, ChevronRight } from 'lucide-react';
+import { ArrowLeft, FolderOpen, FileText, Plus, Edit2, Trash2, ChevronDown, ChevronRight, Users } from 'lucide-react';
+import { CollaboratorsPanel } from '@/components/CollaboratorsPanel';
 
 interface TestCase {
   id: string;
@@ -25,6 +26,8 @@ interface TestSuite {
   description: string | null;
   createdAt: string;
   updatedAt: string;
+  isOwner?: boolean;
+  collaborationRole?: string;
   _count: {
     testCases: number;
   };
@@ -181,22 +184,32 @@ export default function TestSuiteDetailPage() {
             </div>
           </div>
           <div className="flex gap-3">
-            <NeoButton
-              variant="secondary"
-              onClick={() => setShowEditModal(true)}
-              className="flex items-center gap-2"
-            >
-              <Edit2 className="w-5 h-5" />
-              Edit
-            </NeoButton>
-            <NeoButton
-              variant="danger"
-              onClick={() => setShowDeleteModal(true)}
-              className="flex items-center gap-2"
-            >
-              <Trash2 className="w-5 h-5" />
-              Delete
-            </NeoButton>
+            {suite.collaborationRole !== 'viewer' && (
+              <NeoButton
+                variant="secondary"
+                onClick={() => setShowEditModal(true)}
+                className="flex items-center gap-2"
+              >
+                <Edit2 className="w-5 h-5" />
+                Edit
+              </NeoButton>
+            )}
+            {suite.isOwner && (
+              <NeoButton
+                variant="danger"
+                onClick={() => setShowDeleteModal(true)}
+                className="flex items-center gap-2"
+              >
+                <Trash2 className="w-5 h-5" />
+                Delete
+              </NeoButton>
+            )}
+            {!suite.isOwner && suite.collaborationRole && (
+              <span className="flex items-center gap-1 px-3 py-2 border-2 border-black bg-[rgb(0,191,255)] font-bold uppercase text-sm">
+                <Users className="w-4 h-4" />
+                Shared
+              </span>
+            )}
           </div>
         </div>
 
@@ -308,6 +321,12 @@ export default function TestSuiteDetailPage() {
                 </div>
               </div>
             </NeoCard>
+
+            <CollaboratorsPanel
+              resourceType="suite"
+              resourceId={suiteId}
+              isOwner={suite.isOwner ?? true}
+            />
 
             {suite.children && suite.children.length > 0 && (
               <NeoCard>

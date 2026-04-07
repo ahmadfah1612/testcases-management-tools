@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { NeoCard } from '@/components/neobrutalism/neo-card';
 import { NeoButton } from '@/components/neobrutalism/neo-button';
-import { PlayCircle, Clock, CheckCircle, XCircle, AlertCircle, Trash2 } from 'lucide-react';
+import { PlayCircle, Clock, CheckCircle, XCircle, AlertCircle, Trash2, Users } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface TestRun {
@@ -14,14 +14,10 @@ interface TestRun {
   status: string;
   startedAt: string;
   completedAt: string | null;
-  testPlan: {
-    id: string;
-    name: string;
-    description: string;
-  };
-  _count: {
-    results: number;
-  };
+  testPlan: { id: string; name: string; description: string };
+  _count: { results: number };
+  isOwner?: boolean;
+  collaborationRole?: string;
 }
 
 export default function TestRunsPage() {
@@ -180,6 +176,12 @@ export default function TestRunsPage() {
                       <span className="border-2 border-black px-3 py-1 font-bold text-sm">
                         {run._count.results} results
                       </span>
+                      {!run.isOwner && run.collaborationRole && (
+                        <span className="flex items-center gap-1 px-2 py-1 border-2 border-black bg-[rgb(0,191,255)] text-xs font-bold uppercase">
+                          <Users className="w-3 h-3" />
+                          Shared
+                        </span>
+                      )}
                     </div>
                     <h3 className="text-2xl font-bold uppercase mb-2">{run.name}</h3>
                     <p className="text-gray-600 mb-2">{run.testPlan.name}</p>

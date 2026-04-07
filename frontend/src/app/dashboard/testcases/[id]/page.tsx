@@ -6,7 +6,8 @@ import { api } from '@/lib/api';
 import { NeoCard } from '@/components/neobrutalism/neo-card';
 import { NeoButton } from '@/components/neobrutalism/neo-button';
 import { toast } from 'sonner';
-import { ArrowLeft, FileText, Edit2, Trash2, Clock, User as UserIcon } from 'lucide-react';
+import { ArrowLeft, FileText, Edit2, Trash2, Clock, Users } from 'lucide-react';
+import { CollaboratorsPanel } from '@/components/CollaboratorsPanel';
 
 interface Step {
   step_number: number;
@@ -23,13 +24,12 @@ interface TestCase {
   status: string;
   priority: string;
   tags: string[];
-  suite: {
-    id: string;
-    name: string;
-  };
+  suite: { id: string; name: string };
   createdAt: string;
   updatedAt: string;
   versions: any[];
+  isOwner?: boolean;
+  collaborationRole?: string;
 }
 
 export default function TestCaseDetailPage() {
@@ -129,22 +129,32 @@ export default function TestCaseDetailPage() {
             </div>
           </div>
           <div className="flex gap-3">
-            <NeoButton
-              variant="secondary"
-              onClick={() => router.push(`/dashboard/testcases/${testCase.id}/edit`)}
-              className="flex items-center gap-2"
-            >
-              <Edit2 className="w-5 h-5" />
-              Edit
-            </NeoButton>
-            <NeoButton
-              variant="danger"
-              onClick={() => setShowDeleteModal(true)}
-              className="flex items-center gap-2"
-            >
-              <Trash2 className="w-5 h-5" />
-              Delete
-            </NeoButton>
+            {testCase.collaborationRole !== 'viewer' && (
+              <NeoButton
+                variant="secondary"
+                onClick={() => router.push(`/dashboard/testcases/${testCase.id}/edit`)}
+                className="flex items-center gap-2"
+              >
+                <Edit2 className="w-5 h-5" />
+                Edit
+              </NeoButton>
+            )}
+            {testCase.isOwner && (
+              <NeoButton
+                variant="danger"
+                onClick={() => setShowDeleteModal(true)}
+                className="flex items-center gap-2"
+              >
+                <Trash2 className="w-5 h-5" />
+                Delete
+              </NeoButton>
+            )}
+            {!testCase.isOwner && testCase.collaborationRole && (
+              <span className="flex items-center gap-1 px-3 py-2 border-2 border-black bg-[rgb(0,191,255)] font-bold uppercase text-sm">
+                <Users className="w-4 h-4" />
+                Shared
+              </span>
+            )}
           </div>
         </div>
 
@@ -239,6 +249,12 @@ export default function TestCaseDetailPage() {
             </div>
           </NeoCard>
         )}
+
+        <CollaboratorsPanel
+          resourceType="testcase"
+          resourceId={caseId}
+          isOwner={testCase.isOwner ?? true}
+        />
 
         {showDeleteModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">

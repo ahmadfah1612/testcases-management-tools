@@ -8,7 +8,7 @@ import { NeoButton } from '@/components/neobrutalism/neo-button';
 import { toast } from 'sonner';
 import {
   Plus, FileText, Edit2, Trash2, Clock, FolderOpen,
-  Upload, Download, ChevronDown, X, AlertCircle
+  Upload, Download, ChevronDown, X, AlertCircle, Users
 } from 'lucide-react';
 import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
@@ -20,12 +20,11 @@ interface TestCase {
   status: string;
   priority: string;
   tags: string[];
-  suite: {
-    id: string;
-    name: string;
-  };
+  suite: { id: string; name: string };
   createdAt: string;
   updatedAt: string;
+  isOwner?: boolean;
+  collaborationRole?: string;
 }
 
 interface ImportRow {
@@ -412,6 +411,12 @@ export default function TestCasesPage() {
                       <span className={`px-3 py-1 text-xs font-bold border-2 border-black uppercase ${getPriorityColor(testCase.priority)}`}>
                         {testCase.priority}
                       </span>
+                      {!testCase.isOwner && testCase.collaborationRole && (
+                        <span className="flex items-center gap-1 px-2 py-1 border-2 border-black bg-[rgb(0,191,255)] text-xs font-bold uppercase">
+                          <Users className="w-3 h-3" />
+                          Shared
+                        </span>
+                      )}
                       {Array.isArray(testCase.tags) && testCase.tags.map((tag: string, index: number) => (
                         <span
                           key={index}

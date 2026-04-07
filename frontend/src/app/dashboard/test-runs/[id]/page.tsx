@@ -6,7 +6,8 @@ import { api } from '@/lib/api';
 import { NeoCard } from '@/components/neobrutalism/neo-card';
 import { NeoButton } from '@/components/neobrutalism/neo-button';
 import { NeoInput } from '@/components/neobrutalism/neo-input';
-import { ArrowLeft, CheckCircle, XCircle, SkipForward, Save, Download } from 'lucide-react';
+import { ArrowLeft, CheckCircle, XCircle, SkipForward, Save, Download, Users } from 'lucide-react';
+import { CollaboratorsPanel } from '@/components/CollaboratorsPanel';
 import { toast } from 'sonner';
 import { exportTestRunToPDF } from '@/lib/pdf-export';
 
@@ -43,13 +44,11 @@ interface TestRun {
   status: string;
   startedAt: string;
   completedAt: string | null;
-  testPlan: {
-    id: string;
-    name: string;
-    description: string;
-  };
+  testPlan: { id: string; name: string; description: string };
   results: TestResult[];
   resultsCount: number;
+  isOwner?: boolean;
+  collaborationRole?: string;
 }
 
 export default function TestRunDetailPage() {
@@ -270,6 +269,12 @@ export default function TestRunDetailPage() {
           </div>
         </div>
         <div className="flex items-center gap-3">
+          {!testRun.isOwner && testRun.collaborationRole && (
+            <span className="flex items-center gap-1 px-3 py-2 border-2 border-black bg-[rgb(0,191,255)] font-bold uppercase text-sm">
+              <Users className="w-4 h-4" />
+              Shared
+            </span>
+          )}
           <NeoButton
             variant="primary"
             onClick={() => exportTestRunToPDF(testRun)}
@@ -278,7 +283,7 @@ export default function TestRunDetailPage() {
             <Download className="w-4 h-4" />
             Export PDF
           </NeoButton>
-          {testRun.status !== 'COMPLETED' && (
+          {testRun.status !== 'COMPLETED' && testRun.collaborationRole !== 'viewer' && (
             <NeoButton
               variant="warning"
               onClick={handleCompleteRun}
@@ -492,6 +497,12 @@ export default function TestRunDetailPage() {
           </NeoButton>
         </NeoCard>
       )}
+
+      <CollaboratorsPanel
+        resourceType="testrun"
+        resourceId={runId}
+        isOwner={testRun.isOwner ?? true}
+      />
     </div>
   );
 }
