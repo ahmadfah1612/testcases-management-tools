@@ -3,6 +3,7 @@
 import { useAuth } from '@/lib/auth-context';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
 import { NeoButton } from '@/components/neobrutalism/neo-button';
 import { 
   Home, 
@@ -31,8 +32,14 @@ export default function DashboardLayout({
 
   useEffect(() => {
     if (!loading && !user && !isRedirecting) {
-      setIsRedirecting(true);
-      router.push('/login');
+      // Verify the Supabase session is truly gone before redirecting
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (!session) {
+          setIsRedirecting(true);
+          router.push('/login');
+        }
+        // If session exists but user is null, auth context will catch up
+      });
     } else if (!loading && user && isRedirecting) {
       setIsRedirecting(false);
     }

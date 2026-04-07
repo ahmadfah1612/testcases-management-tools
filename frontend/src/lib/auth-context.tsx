@@ -115,21 +115,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const fetchUser = async (authId: string) => {
+  const fetchUser = async (authId: string, retryCount = 0) => {
     try {
-      const timeout = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('fetchUser timeout')), 5000)
-      );
-      const query = supabase.from('users').select('*').eq('auth_id', authId).single();
-      const { data: userData, error } = await Promise.race([query, timeout]);
+      const { data: userData, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('auth_id', authId)
+        .single();
 
       if (error) {
         console.error('Error fetching user:', error);
-        setUser(null);
+        // Retry once after a short delay — the session/RLS may not be ready yet
+        if (retryCount < 1) {
+          await new Promise(r => setTimeout(r, 1000));
+          return fetchUser(authId, retryCount + 1);
+        }
       } else if (userData) {
         setUser(userData);
-      } else {
-        setUser(null);
       }
     } catch (error) {
       console.error('Error fetching user:', error);
