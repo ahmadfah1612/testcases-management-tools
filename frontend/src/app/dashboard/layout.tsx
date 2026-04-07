@@ -108,7 +108,15 @@ export default function DashboardLayout({
           </nav>
         </aside>
 
-        <main className="flex-1" key={pathname}>{children}</main>
+        <main className="flex-1" key={pathname}>
+          {loading ? (
+            <div className="text-center py-12">
+              <div className="text-2xl font-bold uppercase">Loading...</div>
+            </div>
+          ) : (
+            children
+          )}
+        </main>
       </div>
     </div>
   );
