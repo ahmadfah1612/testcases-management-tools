@@ -6,7 +6,7 @@ import { api } from '@/lib/api';
 import { NeoCard } from '@/components/neobrutalism/neo-card';
 import { NeoButton } from '@/components/neobrutalism/neo-button';
 import { NeoInput } from '@/components/neobrutalism/neo-input';
-import { Trash2, Plus, User as UserIcon } from 'lucide-react';
+import { Trash2, Plus, User as UserIcon, Eye, EyeOff } from 'lucide-react';
 
 interface User {
   id: string;
@@ -28,6 +28,7 @@ export default function UsersPage() {
     role: 'user' as 'admin' | 'user'
   });
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     if (!isAdmin()) {
@@ -221,14 +222,23 @@ export default function UsersPage() {
 
                 <div>
                   <label className="block font-bold uppercase mb-2">Password</label>
-                  <NeoInput
-                    type="password"
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    placeholder="Enter password"
-                    required
-                    className="w-full"
-                  />
+                  <div className="relative">
+                    <NeoInput
+                      type={showPassword ? 'text' : 'password'}
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      placeholder="Enter password"
+                      required
+                      className="w-full pr-12"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-black/10 rounded"
+                    >
+                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
                 </div>
 
                 <div>

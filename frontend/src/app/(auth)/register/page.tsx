@@ -6,7 +6,7 @@ import { useAuth } from '@/lib/auth-context';
 import { NeoCard } from '@/components/neobrutalism/neo-card';
 import { NeoInput } from '@/components/neobrutalism/neo-input';
 import { NeoButton } from '@/components/neobrutalism/neo-button';
-import { AlertCircle, Info } from 'lucide-react';
+import { AlertCircle, Info, Eye, EyeOff } from 'lucide-react';
 
 export default function RegisterPage() {
   const [username, setUsername] = useState('');
@@ -16,6 +16,8 @@ export default function RegisterPage() {
   const [invitationCode, setInvitationCode] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { register } = useAuth();
   const router = useRouter();
 
@@ -114,26 +116,44 @@ export default function RegisterPage() {
 
           <div>
             <label className="block font-bold uppercase mb-2">Password</label>
-            <NeoInput
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Choose password"
-              required
-              className="w-full"
-            />
+            <div className="relative">
+              <NeoInput
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Choose password"
+                required
+                className="w-full pr-12"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-black/10 rounded"
+              >
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
+            </div>
           </div>
 
           <div>
             <label className="block font-bold uppercase mb-2">Confirm Password</label>
-            <NeoInput
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Confirm password"
-              required
-              className="w-full"
-            />
+            <div className="relative">
+              <NeoInput
+                type={showConfirmPassword ? 'text' : 'password'}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirm password"
+                required
+                className="w-full pr-12"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-black/10 rounded"
+              >
+                {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
+            </div>
           </div>
 
           <NeoButton 

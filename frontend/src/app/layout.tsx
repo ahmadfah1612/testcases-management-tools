@@ -21,7 +21,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Test Manager - Neo Brutalist",
+  title: "Test Manager",
   description: "Test Case Management Tool",
 };
 
