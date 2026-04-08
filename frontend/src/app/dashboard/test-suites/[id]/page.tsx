@@ -7,8 +7,10 @@ import { NeoCard } from '@/components/neobrutalism/neo-card';
 import { NeoButton } from '@/components/neobrutalism/neo-button';
 import { NeoInput } from '@/components/neobrutalism/neo-input';
 import { toast } from 'sonner';
-import { ArrowLeft, FolderOpen, FileText, Plus, Edit2, Trash2, ChevronDown, ChevronRight, Users } from 'lucide-react';
+import { ArrowLeft, FolderOpen, FileText, Plus, Edit2, Trash2, ChevronDown, ChevronRight, Users, Download } from 'lucide-react';
 import { CollaboratorsPanel } from '@/components/CollaboratorsPanel';
+import Papa from 'papaparse';
+import * as XLSX from 'xlsx';
 
 interface TestCase {
   id: string;
@@ -49,6 +51,8 @@ export default function TestSuiteDetailPage() {
     name: '',
     description: ''
   });
+  const [exportOpen, setExportOpen] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -127,6 +131,50 @@ export default function TestSuiteDetailPage() {
     });
   };
 
+  useEffect(() => {
+    if (!exportOpen) return;
+    const handler = () => setExportOpen(false);
+    window.addEventListener('click', handler);
+    return () => window.removeEventListener('click', handler);
+  }, [exportOpen]);
+
+  const downloadBlob = (blob: Blob, filename: string) => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExport = async (format: 'csv' | 'excel') => {
+    setExporting(true);
+    setExportOpen(false);
+    try {
+      const data = await api.get(`/testcases/export?suiteId=${suiteId}`);
+      const rows: any[] = data.data || [];
+      if (rows.length === 0) {
+        toast.info('No test cases to export');
+        return;
+      }
+      const safeName = (suite?.name || 'suite').replace(/[^a-z0-9]/gi, '_').toLowerCase();
+      if (format === 'csv') {
+        const csv = Papa.unparse(rows);
+        downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8;' }), `${safeName}-testcases.csv`);
+      } else {
+        const ws = XLSX.utils.json_to_sheet(rows);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Test Cases');
+        XLSX.writeFile(wb, `${safeName}-testcases.xlsx`);
+      }
+      toast.success(`Exported ${rows.length} test cases`);
+    } catch {
+      toast.error('Export failed');
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
       'DRAFT': 'bg-gray-200',
@@ -184,6 +232,36 @@ export default function TestSuiteDetailPage() {
             </div>
           </div>
           <div className="flex gap-3">
+            {/* Export dropdown */}
+            <div className="relative" onClick={e => e.stopPropagation()}>
+              <NeoButton
+                variant="secondary"
+                onClick={() => setExportOpen(o => !o)}
+                disabled={exporting}
+                className="flex items-center gap-2"
+              >
+                <Download className="w-4 h-4" />
+                Export
+                <ChevronDown className="w-3 h-3" />
+              </NeoButton>
+              {exportOpen && (
+                <div className="absolute right-0 top-full mt-1 z-20 bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] min-w-[180px]">
+                  <button
+                    onClick={() => handleExport('csv')}
+                    className="w-full text-left px-4 py-2 font-bold uppercase hover:bg-gray-100 border-b-2 border-black text-sm"
+                  >
+                    Export as CSV
+                  </button>
+                  <button
+                    onClick={() => handleExport('excel')}
+                    className="w-full text-left px-4 py-2 font-bold uppercase hover:bg-gray-100 text-sm"
+                  >
+                    Export as Excel
+                  </button>
+                </div>
+              )}
+            </div>
+
             {suite.collaborationRole !== 'viewer' && (
               <NeoButton
                 variant="secondary"
