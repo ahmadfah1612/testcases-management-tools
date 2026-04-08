@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
+import { useAuth } from '@/lib/auth-context';
 import { NeoCard } from '@/components/neobrutalism/neo-card';
 import { NeoButton } from '@/components/neobrutalism/neo-button';
 import { toast } from 'sonner';
@@ -52,6 +53,7 @@ const CSV_TEMPLATE_EXAMPLE = [
 
 export default function TestCasesPage() {
   const router = useRouter();
+  const { user } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [testCases, setTestCases] = useState<TestCase[]>([]);
@@ -78,8 +80,10 @@ export default function TestCasesPage() {
   }, [filter]);
 
   useEffect(() => {
-    fetchTestCases();
-  }, [page, filter]);
+    if (user) {
+      fetchTestCases();
+    }
+  }, [user, page, filter]);
 
   // Close export dropdown when clicking outside
   useEffect(() => {

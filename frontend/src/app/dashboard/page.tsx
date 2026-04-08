@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
+import { useAuth } from '@/lib/auth-context';
 
 interface DashboardStats {
   totalCases: number;
@@ -19,12 +20,15 @@ interface DashboardStats {
 
 export default function DashboardPage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchStats();
-  }, []);
+    if (user) {
+      fetchStats();
+    }
+  }, [user]);
 
   const fetchStats = async () => {
     try {

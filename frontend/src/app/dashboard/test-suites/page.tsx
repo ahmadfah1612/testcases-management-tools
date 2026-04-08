@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
+import { useAuth } from '@/lib/auth-context';
 import { NeoCard } from '@/components/neobrutalism/neo-card';
 import { NeoButton } from '@/components/neobrutalism/neo-button';
 import { FolderOpen, Plus, Edit2, Trash2, Users } from 'lucide-react';
@@ -24,6 +25,7 @@ interface TestSuite {
 
 export default function TestSuitesPage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [suites, setSuites] = useState<TestSuite[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteModal, setDeleteModal] = useState<{ id: string; name: string } | null>(null);
@@ -33,8 +35,10 @@ export default function TestSuitesPage() {
   const limit = 10;
 
   useEffect(() => {
-    fetchSuites();
-  }, [page]);
+    if (user) {
+      fetchSuites();
+    }
+  }, [user, page]);
 
 
   const fetchSuites = async () => {

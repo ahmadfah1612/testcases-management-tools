@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { api } from '@/lib/api';
+import { useAuth } from '@/lib/auth-context';
 import { NeoCard } from '@/components/neobrutalism/neo-card';
 import { NeoButton } from '@/components/neobrutalism/neo-button';
 import { toast } from 'sonner';
@@ -47,6 +48,7 @@ interface TestPlan {
 export default function TestPlanDetailPage() {
   const router = useRouter();
   const params = useParams();
+  const { user } = useAuth();
   const planId = params.id as string;
   
   const [testPlan, setTestPlan] = useState<TestPlan | null>(null);
@@ -62,11 +64,11 @@ export default function TestPlanDetailPage() {
   const testCaseLimit = 20;
 
   useEffect(() => {
-    if (planId) {
+    if (user && planId) {
       fetchTestPlan();
       fetchTestCases();
     }
-  }, [planId, testCasePage]);
+  }, [user, planId, testCasePage]);
 
   const fetchTestPlan = async () => {
     try {

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
+import { useAuth } from '@/lib/auth-context';
 import { NeoCard } from '@/components/neobrutalism/neo-card';
 import { NeoButton } from '@/components/neobrutalism/neo-button';
 import { Activity, TrendingUp, TrendingDown, FileText, Calendar, Download } from 'lucide-react';
@@ -29,14 +30,17 @@ interface Trend {
 
 export default function ReportsPage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<Stats | null>(null);
   const [trends, setTrends] = useState<Trend[]>([]);
   const [period, setPeriod] = useState('30');
 
   useEffect(() => {
-    fetchReports();
-  }, [period]);
+    if (user) {
+      fetchReports();
+    }
+  }, [user, period]);
 
   const fetchReports = async () => {
     try {

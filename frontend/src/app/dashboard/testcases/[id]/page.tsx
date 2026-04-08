@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
+import { useAuth } from '@/lib/auth-context';
 import { NeoCard } from '@/components/neobrutalism/neo-card';
 import { NeoButton } from '@/components/neobrutalism/neo-button';
 import { toast } from 'sonner';
@@ -35,6 +36,7 @@ interface TestCase {
 export default function TestCaseDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const { user } = useAuth();
   const caseId = params.id as string;
 
   const [testCase, setTestCase] = useState<TestCase | null>(null);
@@ -42,8 +44,10 @@ export default function TestCaseDetailPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   useEffect(() => {
-    fetchTestCase();
-  }, [caseId]);
+    if (user) {
+      fetchTestCase();
+    }
+  }, [user, caseId]);
 
   const fetchTestCase = async () => {
     try {

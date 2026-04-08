@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
+import { useAuth } from '@/lib/auth-context';
 import { NeoCard } from '@/components/neobrutalism/neo-card';
 import { NeoButton } from '@/components/neobrutalism/neo-button';
 import { PlayCircle, Plus, Edit2, Trash2, ListTodo, Clock } from 'lucide-react';
@@ -23,6 +24,7 @@ interface TestPlan {
 
 export default function TestPlansPage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [testPlans, setTestPlans] = useState<TestPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteModal, setDeleteModal] = useState<{ id: string; name: string } | null>(null);
@@ -32,8 +34,10 @@ export default function TestPlansPage() {
   const limit = 10;
 
   useEffect(() => {
-    fetchTestPlans();
-  }, [page]);
+    if (user) {
+      fetchTestPlans();
+    }
+  }, [user, page]);
 
   const fetchTestPlans = async () => {
     try {

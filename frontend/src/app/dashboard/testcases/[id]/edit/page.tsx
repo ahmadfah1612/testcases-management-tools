@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
+import { useAuth } from '@/lib/auth-context';
 import { NeoCard } from '@/components/neobrutalism/neo-card';
 import { NeoButton } from '@/components/neobrutalism/neo-button';
 import { NeoInput } from '@/components/neobrutalism/neo-input';
@@ -32,6 +33,7 @@ interface TestCase {
 export default function EditTestCasePage() {
   const params = useParams();
   const router = useRouter();
+  const { user } = useAuth();
   const caseId = params.id as string;
 
   const [loading, setLoading] = useState(true);
@@ -48,8 +50,10 @@ export default function EditTestCasePage() {
   const [newTag, setNewTag] = useState('');
 
   useEffect(() => {
-    fetchTestCase();
-  }, [caseId]);
+    if (user) {
+      fetchTestCase();
+    }
+  }, [user, caseId]);
 
   const fetchTestCase = async () => {
     try {

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
+import { useAuth } from '@/lib/auth-context';
 import { NeoCard } from '@/components/neobrutalism/neo-card';
 import { NeoButton } from '@/components/neobrutalism/neo-button';
 import { toast } from 'sonner';
@@ -16,10 +17,11 @@ interface TestPlan {
 
 export default function NewSchedulePage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [testPlans, setTestPlans] = useState<TestPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  
+
   const [formData, setFormData] = useState({
     testPlanId: '',
     name: '',
@@ -30,8 +32,10 @@ export default function NewSchedulePage() {
   const [preset, setPreset] = useState<'custom' | 'daily' | 'weekly' | 'hourly'>('daily');
 
   useEffect(() => {
-    fetchTestPlans();
-  }, []);
+    if (user) {
+      fetchTestPlans();
+    }
+  }, [user]);
 
   const fetchTestPlans = async () => {
     try {

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
+import { useAuth } from '@/lib/auth-context';
 import { NeoCard } from '@/components/neobrutalism/neo-card';
 import { NeoButton } from '@/components/neobrutalism/neo-button';
 import { NeoInput } from '@/components/neobrutalism/neo-input';
@@ -39,6 +40,7 @@ interface TestSuite {
 export default function TestSuiteDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const { user } = useAuth();
   const suiteId = params.id as string;
 
   const [suite, setSuite] = useState<TestSuite | null>(null);
@@ -55,8 +57,10 @@ export default function TestSuiteDetailPage() {
   const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
-    fetchData();
-  }, [suiteId]);
+    if (user) {
+      fetchData();
+    }
+  }, [user, suiteId]);
 
   const fetchData = async () => {
     try {

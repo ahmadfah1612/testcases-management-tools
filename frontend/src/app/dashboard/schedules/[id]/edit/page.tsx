@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
+import { useAuth } from '@/lib/auth-context';
 import { NeoCard } from '@/components/neobrutalism/neo-card';
 import { NeoButton } from '@/components/neobrutalism/neo-button';
 import { toast } from 'sonner';
@@ -32,6 +33,7 @@ interface Schedule {
 
 export default function EditSchedulePage({ params }: { params: { id: string } }) {
   const router = useRouter();
+  const { user } = useAuth();
   const [schedule, setSchedule] = useState<Schedule | null>(null);
   const [testPlans, setTestPlans] = useState<TestPlan[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,9 +48,11 @@ export default function EditSchedulePage({ params }: { params: { id: string } })
   const [preset, setPreset] = useState<'custom' | 'daily' | 'weekly' | 'hourly'>('daily');
 
   useEffect(() => {
-    fetchSchedule();
-    fetchTestPlans();
-  }, [params.id]);
+    if (user) {
+      fetchSchedule();
+      fetchTestPlans();
+    }
+  }, [user, params.id]);
 
   const fetchSchedule = async () => {
     try {

@@ -40,13 +40,17 @@ export default function InvitationManagementPage() {
   const [creating, setCreating] = useState(false);
 
   useEffect(() => {
-    fetchCodes();
-    
     // Set default expiration to 7 days from now
     const sevenDaysFromNow = new Date();
     sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
     setExpiresAt(sevenDaysFromNow.toISOString().slice(0, 16));
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      fetchCodes();
+    }
+  }, [user]);
 
   const fetchCodes = async () => {
     try {

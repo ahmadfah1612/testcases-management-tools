@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { api } from '@/lib/api';
+import { useAuth } from '@/lib/auth-context';
 import { NeoCard } from '@/components/neobrutalism/neo-card';
 import { NeoButton } from '@/components/neobrutalism/neo-button';
 import { NeoInput } from '@/components/neobrutalism/neo-input';
@@ -54,6 +55,7 @@ interface TestRun {
 export default function TestRunDetailPage() {
   const router = useRouter();
   const params = useParams();
+  const { user } = useAuth();
   const runId = params.id as string;
 
   const [testRun, setTestRun] = useState<TestRun | null>(null);
@@ -66,10 +68,10 @@ export default function TestRunDetailPage() {
   const [loadingResults, setLoadingResults] = useState(false);
 
   useEffect(() => {
-    if (runId) {
+    if (user && runId) {
       fetchTestRun(false);
     }
-  }, [runId, resultsPage]);
+  }, [user, runId, resultsPage]);
 
   const fetchTestRun = async (preserveDrafts: boolean = false) => {
     try {

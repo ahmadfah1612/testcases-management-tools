@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
+import { useAuth } from '@/lib/auth-context';
 import { NeoCard } from '@/components/neobrutalism/neo-card';
 import { NeoButton } from '@/components/neobrutalism/neo-button';
 import { PlayCircle, Clock, CheckCircle, XCircle, AlertCircle, Trash2, Users } from 'lucide-react';
@@ -22,6 +23,7 @@ interface TestRun {
 
 export default function TestRunsPage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [testRuns, setTestRuns] = useState<TestRun[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -35,8 +37,10 @@ export default function TestRunsPage() {
   }, [filter]);
 
   useEffect(() => {
-    fetchTestRuns();
-  }, [page, filter]);
+    if (user) {
+      fetchTestRuns();
+    }
+  }, [user, page, filter]);
 
   const fetchTestRuns = async () => {
     try {

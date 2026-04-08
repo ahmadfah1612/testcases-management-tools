@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
+import { useAuth } from '@/lib/auth-context';
 import { NeoCard } from '@/components/neobrutalism/neo-card';
 import { NeoButton } from '@/components/neobrutalism/neo-button';
 import { ArrowLeft, FolderOpen, Plus, FileText } from 'lucide-react';
@@ -19,12 +20,15 @@ interface TestSuite {
 
 export default function NewTestCasePage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [suites, setSuites] = useState<TestSuite[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchSuites();
-  }, []);
+    if (user) {
+      fetchSuites();
+    }
+  }, [user]);
 
   const fetchSuites = async () => {
     try {

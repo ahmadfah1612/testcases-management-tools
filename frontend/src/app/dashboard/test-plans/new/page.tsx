@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { api } from '@/lib/api';
+import { useAuth } from '@/lib/auth-context';
 import { NeoCard } from '@/components/neobrutalism/neo-card';
 import { NeoButton } from '@/components/neobrutalism/neo-button';
 import { toast } from 'sonner';
@@ -28,6 +29,7 @@ interface GroupedTestCases {
 
 export default function NewTestPlanPage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [testCases, setTestCases] = useState<TestCase[]>([]);
@@ -40,8 +42,10 @@ export default function NewTestPlanPage() {
   const testCaseLimit = 20;
  
   useEffect(() => {
-    fetchTestCases();
-  }, [testCasePage]);
+    if (user) {
+      fetchTestCases();
+    }
+  }, [user, testCasePage]);
  
   const fetchTestCases = async () => {
     try {

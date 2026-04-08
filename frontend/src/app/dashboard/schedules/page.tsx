@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
+import { useAuth } from '@/lib/auth-context';
 import { NeoCard } from '@/components/neobrutalism/neo-card';
 import { NeoButton } from '@/components/neobrutalism/neo-button';
 import { toast } from 'sonner';
@@ -25,13 +26,16 @@ interface Schedule {
 
 export default function SchedulesPage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [loading, setLoading] = useState(true);
   const [toggleLoading, setToggleLoading] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchSchedules();
-  }, []);
+    if (user) {
+      fetchSchedules();
+    }
+  }, [user]);
 
   const fetchSchedules = async () => {
     try {
