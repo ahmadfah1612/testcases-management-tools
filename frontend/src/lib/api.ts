@@ -1,19 +1,19 @@
-import { supabase } from './supabase';
+import { supabase, getCachedSession, waitForSession } from './supabase';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
 class ApiClient {
-  private async getSession() {
-    // Race against a timeout so a hanging Supabase auto-refresh never blocks the app
-    const session = await Promise.race([
-      supabase.auth.getSession().then(r => r.data.session),
-      new Promise<null>(resolve => setTimeout(() => resolve(null), 8000)),
-    ]);
-    return session;
-  }
-
   private async getHeaders(): Promise<Record<string, string>> {
-    const session = await this.getSession();
+    // Wait for Supabase INITIAL_SESSION before reading the session.
+    // This is instant after the first page load; on the very first call it
+    // awaits Supabase initialization (including any token refresh on startup).
+    // 10-second safety timeout guards against a broken Supabase init.
+    await Promise.race([
+      waitForSession(),
+      new Promise<void>(resolve => setTimeout(resolve, 10000)),
+    ]);
+
+    const session = getCachedSession();
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
 
     if (session?.access_token) {
@@ -88,11 +88,12 @@ class ApiClient {
   }
 
   private async handleResponse(response: Response, retry?: () => Promise<any>): Promise<any> {
-    // Token rejected — call getSession() which handles auto-refresh internally.
-    // Using getSession() (not refreshSession()) avoids explicit lock contention with
-    // Supabase's own auto-refresh that may already be in progress.
     if (response.status === 401) {
-      const session = await this.getSession();
+      // By the time we reach here, INITIAL_SESSION has already fired (getHeaders
+      // waited for it). A 401 means the stored token was rejected — either it
+      // expired mid-request or was revoked. Call getSession() once to let
+      // Supabase auto-refresh; this is rare so the occasional lock wait is fine.
+      const { data: { session } } = await supabase.auth.getSession();
       if (session && retry) {
         return retry();
       }
