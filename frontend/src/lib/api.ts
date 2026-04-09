@@ -35,13 +35,13 @@ class ApiClient {
     };
   }
 
-  async get(endpoint: string) {
+  async get(endpoint: string): Promise<any> {
     const headers = await this.getHeaders();
     const response = await fetch(`${API_URL}${endpoint}`, { headers });
     return this.handleResponse(response, () => this.get(endpoint));
   }
 
-  async post(endpoint: string, data: any) {
+  async post(endpoint: string, data: any): Promise<any> {
     const headers = await this.getHeaders();
     const url = `${API_URL}${endpoint}`;
 
@@ -67,7 +67,7 @@ class ApiClient {
     }
   }
 
-  async put(endpoint: string, data: any) {
+  async put(endpoint: string, data: any): Promise<any> {
     const headers = await this.getHeaders();
     const response = await fetch(`${API_URL}${endpoint}`, {
       method: 'PUT',
@@ -77,7 +77,7 @@ class ApiClient {
     return this.handleResponse(response, () => this.put(endpoint, data));
   }
 
-  async delete(endpoint: string) {
+  async delete(endpoint: string): Promise<any> {
     const headers = await this.getHeaders();
     const response = await fetch(`${API_URL}${endpoint}`, {
       method: 'DELETE',
