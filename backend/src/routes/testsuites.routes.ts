@@ -228,10 +228,12 @@ router.delete('/:id', async (req: AuthRequest, res) => {
     if (!role) return res.status(403).json({ error: 'Access denied' });
     if (role !== 'owner') return res.status(403).json({ error: 'Only the owner can delete' });
 
-    const { error } = await supabase.from('test_suites').delete().eq('id', id);
+    const { data: deleted, error } = await supabase.from('test_suites').delete().eq('id', id).select('id');
     if (error) return res.status(500).json({ error: 'Failed to delete test suite' });
+    if (!deleted || deleted.length === 0) return res.status(500).json({ error: 'Delete failed: no rows affected (check Supabase service role key and RLS configuration)' });
     res.status(204).send();
-  } catch {
+  } catch (err) {
+    console.error('Delete test suite error:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

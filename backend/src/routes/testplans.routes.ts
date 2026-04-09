@@ -216,17 +216,22 @@ router.put('/:id', async (req: AuthRequest, res) => {
 
 router.delete('/:id', async (req: AuthRequest, res) => {
   try {
-    const { error } = await supabase
+    const { data: deleted, error } = await supabase
       .from('test_plans')
       .delete()
-      .eq('id', req.params.id);
+      .eq('id', req.params.id)
+      .select('id');
 
     if (error) {
       return res.status(500).json({ error: 'Failed to delete test plan' });
     }
+    if (!deleted || deleted.length === 0) {
+      return res.status(500).json({ error: 'Delete failed: no rows affected (check Supabase service role key and RLS configuration)' });
+    }
 
     res.status(204).send();
-  } catch (error) {
+  } catch (err) {
+    console.error('Delete test plan error:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
