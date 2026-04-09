@@ -268,7 +268,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = async () => {
-    await supabase.auth.signOut();
+    // In Chrome, signOut() acquires Supabase's Web Lock and can hang if an
+    // auto-refresh is holding it. Race with a 3-second timeout so the user
+    // is never stuck when they click Logout.
+    await Promise.race([
+      supabase.auth.signOut(),
+      new Promise<void>(resolve => setTimeout(resolve, 3000)),
+    ]);
     setUser(null);
     if (typeof window !== 'undefined') {
       window.location.href = '/login';
