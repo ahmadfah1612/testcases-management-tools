@@ -60,7 +60,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Restore cached user on client mount (avoids SSR hydration mismatch)
   useEffect(() => {
     const cached = getCachedUser();
-    if (cached) setUserState(cached);
+    if (cached) {
+      setUserState(cached);
+      setLoading(false); // cached user means we can show content immediately
+    }
   }, []);
 
   const router = useRouter();

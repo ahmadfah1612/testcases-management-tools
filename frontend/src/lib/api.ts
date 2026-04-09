@@ -5,17 +5,6 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 class ApiClient {
   private async getSession() {
     const { data: { session } } = await supabase.auth.getSession();
-
-    if (!session) return null;
-
-    // Proactively refresh if token expires within the next 60 seconds
-    const expiresAt = session.expires_at ?? 0; // Unix timestamp (seconds)
-    const nowSecs = Math.floor(Date.now() / 1000);
-    if (expiresAt - nowSecs < 60) {
-      const { data: { session: refreshed } } = await supabase.auth.refreshSession();
-      return refreshed;
-    }
-
     return session;
   }
 
