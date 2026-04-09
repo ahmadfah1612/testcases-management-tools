@@ -109,12 +109,12 @@ export default function DashboardLayout({
         </aside>
 
         <main className="flex-1" key={pathname}>
-          {loading || !user ? (
+          {user ? (
+            children
+          ) : (
             <div className="text-center py-12">
               <div className="text-2xl font-bold uppercase">Loading...</div>
             </div>
-          ) : (
-            children
           )}
         </main>
       </div>
