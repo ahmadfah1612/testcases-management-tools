@@ -19,20 +19,17 @@ class ApiClient {
     return session;
   }
 
-  private async getHeaders() {
+  private async getHeaders(): Promise<Record<string, string>> {
     const session = await this.getSession();
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
 
-    if (!session?.access_token) {
+    if (session?.access_token) {
+      headers['Authorization'] = `Bearer ${session.access_token}`;
+    } else {
       console.log('No session found');
-      return {
-        'Content-Type': 'application/json',
-      };
     }
 
-    return {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${session.access_token}`,
-    };
+    return headers;
   }
 
   async get(endpoint: string): Promise<any> {
