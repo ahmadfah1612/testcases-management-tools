@@ -242,9 +242,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error(data.error || 'Registration failed');
       }
 
-      // Store the token and user data
       if (data.token) {
-        // Set user data from response
+        // Establish a Supabase session so subsequent API calls include the Authorization header.
+        // The backend uses the service role key which auto-confirms new users, so sign-in
+        // succeeds immediately after registration.
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (signInError) {
+          console.error('Auto-login after registration failed:', signInError);
+        }
+
         setUser(data.user);
         router.push('/dashboard');
       }
