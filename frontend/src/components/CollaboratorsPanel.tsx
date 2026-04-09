@@ -115,7 +115,7 @@ export function CollaboratorsPanel({ resourceType, resourceId, isOwner }: Collab
             <div key={collab.id} className="flex items-center justify-between p-2 border-2 border-black bg-gray-50">
               <div className="flex items-center gap-2 min-w-0">
                 <div className="font-bold text-sm truncate">{collab.username}</div>
-                <span className={`px-2 py-0.5 text-xs font-bold border border-black uppercase flex-shrink-0 ${collab.role === 'editor' ? 'bg-[rgb(57,255,20)]' : 'bg-gray-200'}`}>
+                <span className={`px-2 py-0.5 text-xs font-bold border border-black uppercase flex-shrink-0 ${collab.role === 'editor' ? 'bg-[rgb(134,239,172)]' : 'bg-gray-200'}`}>
                   {collab.role}
                 </span>
               </div>

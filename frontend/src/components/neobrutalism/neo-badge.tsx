@@ -9,10 +9,10 @@ const NeoBadge = forwardRef<HTMLSpanElement, NeoBadgeProps>(
   ({ className, variant = 'default', children, ...props }, ref) => {
     const variantClasses = {
       default: 'bg-white',
-      success: 'bg-[rgb(57,255,20)]',
-      warning: 'bg-[rgb(255,255,0)]',
-      danger: 'bg-[rgb(239,68,68)]',
-      info: 'bg-[rgb(0,191,255)]',
+      success: 'bg-[rgb(134,239,172)]',
+      warning: 'bg-[rgb(253,224,71)]',
+      danger: 'bg-[rgb(252,165,165)]',
+      info: 'bg-[rgb(147,197,253)]',
     };
 
     return (

@@ -80,26 +80,26 @@ export default function TestRunsPage() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'COMPLETED':
-        return <CheckCircle className="w-6 h-6 text-[rgb(57,255,20)]" />;
+        return <CheckCircle className="w-6 h-6 text-[rgb(134,239,172)]" />;
       case 'FAILED':
-        return <XCircle className="w-6 h-6 text-[rgb(239,68,68)]" />;
+        return <XCircle className="w-6 h-6 text-[rgb(252,165,165)]" />;
       case 'RUNNING':
-        return <PlayCircle className="w-6 h-6 text-[rgb(255,255,0)]" />;
+        return <PlayCircle className="w-6 h-6 text-[rgb(253,224,71)]" />;
       default:
-        return <AlertCircle className="w-6 h-6 text-[rgb(0,191,255)]" />;
+        return <AlertCircle className="w-6 h-6 text-[rgb(147,197,253)]" />;
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'COMPLETED':
-        return 'bg-[rgb(57,255,20)]';
+        return 'bg-[rgb(134,239,172)]';
       case 'FAILED':
-        return 'bg-[rgb(239,68,68)]';
+        return 'bg-[rgb(252,165,165)]';
       case 'RUNNING':
-        return 'bg-[rgb(255,255,0)]';
+        return 'bg-[rgb(253,224,71)]';
       default:
-        return 'bg-[rgb(0,191,255)]';
+        return 'bg-[rgb(147,197,253)]';
     }
   };
 
@@ -181,7 +181,7 @@ export default function TestRunsPage() {
                         {run._count.results} results
                       </span>
                       {!run.isOwner && run.collaborationRole && (
-                        <span className="flex items-center gap-1 px-2 py-1 border-2 border-black bg-[rgb(0,191,255)] text-xs font-bold uppercase">
+                        <span className="flex items-center gap-1 px-2 py-1 border-2 border-black bg-[rgb(147,197,253)] text-xs font-bold uppercase">
                           <Users className="w-3 h-3" />
                           Shared
                         </span>

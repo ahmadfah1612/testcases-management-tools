@@ -182,9 +182,9 @@ export default function TestSuiteDetailPage() {
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
       'DRAFT': 'bg-gray-200',
-      'READY': 'bg-[rgb(57,255,20)]',
-      'REVIEW': 'bg-[rgb(255,255,0)]',
-      'APPROVED': 'bg-[rgb(0,191,255)]'
+      'READY': 'bg-[rgb(134,239,172)]',
+      'REVIEW': 'bg-[rgb(253,224,71)]',
+      'APPROVED': 'bg-[rgb(147,197,253)]'
     };
     return colors[status] || 'bg-gray-200';
   };
@@ -192,9 +192,9 @@ export default function TestSuiteDetailPage() {
   const getPriorityColor = (priority: string) => {
     const colors: Record<string, string> = {
       'LOW': 'bg-gray-200',
-      'MEDIUM': 'bg-[rgb(0,191,255)]',
-      'HIGH': 'bg-[rgb(255,105,180)]',
-      'CRITICAL': 'bg-[rgb(239,68,68)]'
+      'MEDIUM': 'bg-[rgb(147,197,253)]',
+      'HIGH': 'bg-[rgb(249,168,212)]',
+      'CRITICAL': 'bg-[rgb(252,165,165)]'
     };
     return colors[priority] || 'bg-gray-200';
   };
@@ -287,7 +287,7 @@ export default function TestSuiteDetailPage() {
               </NeoButton>
             )}
             {!suite.isOwner && suite.collaborationRole && (
-              <span className="flex items-center gap-1 px-3 py-2 border-2 border-black bg-[rgb(0,191,255)] font-bold uppercase text-sm">
+              <span className="flex items-center gap-1 px-3 py-2 border-2 border-black bg-[rgb(147,197,253)] font-bold uppercase text-sm">
                 <Users className="w-4 h-4" />
                 Shared
               </span>
@@ -426,7 +426,7 @@ export default function TestSuiteDetailPage() {
                           ) : (
                             <ChevronRight className="w-4 h-4" />
                           )}
-                          <FolderOpen className="w-5 h-5 text-[rgb(57,255,20)]" />
+                          <FolderOpen className="w-5 h-5 text-[rgb(134,239,172)]" />
                           {child.name}
                         </div>
                         <div className="text-xs border-2 border-black px-2 py-1">
@@ -470,7 +470,7 @@ export default function TestSuiteDetailPage() {
                   <textarea
                     value={editForm.description}
                     onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
-                    className="w-full p-4 border-2 border-black bg-white focus:border-3 focus:outline-none focus:border-[rgb(0,191,255)] transition-all min-h-[120px]"
+                    className="w-full p-4 border-2 border-black bg-white focus:border-3 focus:outline-none focus:border-[rgb(147,197,253)] transition-all min-h-[120px]"
                     rows={4}
                   />
                 </div>
@@ -499,7 +499,7 @@ export default function TestSuiteDetailPage() {
               <h2 className="text-2xl font-bold uppercase mb-4">Delete Test Suite</h2>
 
               <div className="space-y-4">
-                <div className="border-2 border-black bg-[rgb(255,255,0)]/20 p-4">
+                <div className="border-2 border-black bg-[rgb(253,224,71)]/20 p-4">
                   <p className="font-bold">
                     Are you sure you want to delete <strong>&quot;{suite.name}&quot;</strong>?
                   </p>

@@ -264,9 +264,9 @@ export default function TestCasesPage() {
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
       'DRAFT': 'bg-gray-200',
-      'READY': 'bg-[rgb(57,255,20)]',
-      'REVIEW': 'bg-[rgb(255,255,0)]',
-      'APPROVED': 'bg-[rgb(0,191,255)]'
+      'READY': 'bg-[rgb(134,239,172)]',
+      'REVIEW': 'bg-[rgb(253,224,71)]',
+      'APPROVED': 'bg-[rgb(147,197,253)]'
     };
     return colors[status] || 'bg-gray-200';
   };
@@ -274,9 +274,9 @@ export default function TestCasesPage() {
   const getPriorityColor = (priority: string) => {
     const colors: Record<string, string> = {
       'LOW': 'bg-gray-200',
-      'MEDIUM': 'bg-[rgb(0,191,255)]',
-      'HIGH': 'bg-[rgb(255,105,180)]',
-      'CRITICAL': 'bg-[rgb(239,68,68)]'
+      'MEDIUM': 'bg-[rgb(147,197,253)]',
+      'HIGH': 'bg-[rgb(249,168,212)]',
+      'CRITICAL': 'bg-[rgb(252,165,165)]'
     };
     return colors[priority] || 'bg-gray-200';
   };
@@ -416,7 +416,7 @@ export default function TestCasesPage() {
                         {testCase.priority}
                       </span>
                       {!testCase.isOwner && testCase.collaborationRole && (
-                        <span className="flex items-center gap-1 px-2 py-1 border-2 border-black bg-[rgb(0,191,255)] text-xs font-bold uppercase">
+                        <span className="flex items-center gap-1 px-2 py-1 border-2 border-black bg-[rgb(147,197,253)] text-xs font-bold uppercase">
                           <Users className="w-3 h-3" />
                           Shared
                         </span>
@@ -424,7 +424,7 @@ export default function TestCasesPage() {
                       {Array.isArray(testCase.tags) && testCase.tags.map((tag: string, index: number) => (
                         <span
                           key={index}
-                          className="px-2 py-1 bg-[rgb(255,105,180)] border-2 border-black text-xs font-bold uppercase"
+                          className="px-2 py-1 bg-[rgb(249,168,212)] border-2 border-black text-xs font-bold uppercase"
                         >
                           {tag}
                         </span>

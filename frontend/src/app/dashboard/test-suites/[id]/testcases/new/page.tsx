@@ -143,8 +143,8 @@ export default function NewTestCasePage() {
 
         <NeoCard>
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="flex items-center gap-4 p-6 bg-[rgb(0,191,255)]/10 border-2 border-black">
-              <div className="w-16 h-16 bg-[rgb(0,191,255)] border-2 border-black flex items-center justify-center">
+            <div className="flex items-center gap-4 p-6 bg-[rgb(147,197,253)]/10 border-2 border-black">
+              <div className="w-16 h-16 bg-[rgb(147,197,253)] border-2 border-black flex items-center justify-center">
                 <FileText className="w-8 h-8" />
               </div>
               <div>
@@ -171,7 +171,7 @@ export default function NewTestCasePage() {
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 placeholder="Describe what this test case covers..."
-                className="w-full p-4 border-2 border-black bg-white focus:border-3 focus:outline-none focus:border-[rgb(0,191,255)] transition-all min-h-[100px]"
+                className="w-full p-4 border-2 border-black bg-white focus:border-3 focus:outline-none focus:border-[rgb(147,197,253)] transition-all min-h-[100px]"
                 rows={3}
               />
             </div>
@@ -226,7 +226,7 @@ export default function NewTestCasePage() {
                   {formData.tags.map((tag: string, index: number) => (
                     <span
                       key={index}
-                      className="inline-flex items-center gap-1 px-3 py-1 bg-[rgb(57,255,20)] border-2 border-black text-sm font-bold"
+                      className="inline-flex items-center gap-1 px-3 py-1 bg-[rgb(134,239,172)] border-2 border-black text-sm font-bold"
                     >
                       {tag}
                       <button
@@ -266,7 +266,7 @@ export default function NewTestCasePage() {
                   {Array.isArray(formData.steps) && formData.steps.map((step: any, index: number) => (
                     <NeoCard key={index} className="bg-gray-50">
                       <div className="flex items-start gap-4">
-                        <div className="w-10 h-10 bg-[rgb(57,255,20)] border-2 border-black flex items-center justify-center font-bold text-lg flex-shrink-0">
+                        <div className="w-10 h-10 bg-[rgb(134,239,172)] border-2 border-black flex items-center justify-center font-bold text-lg flex-shrink-0">
                           {step.step_number}
                         </div>
                         <div className="flex-1 space-y-3">
@@ -276,7 +276,7 @@ export default function NewTestCasePage() {
                               value={step.action}
                               onChange={(e) => updateStep(index, 'action', e.target.value)}
                               placeholder="Describe action to perform..."
-                              className="w-full p-3 border-2 border-black bg-white focus:border-3 focus:outline-none focus:border-[rgb(0,191,255)] transition-all min-h-[60px]"
+                              className="w-full p-3 border-2 border-black bg-white focus:border-3 focus:outline-none focus:border-[rgb(147,197,253)] transition-all min-h-[60px]"
                               rows={2}
                             />
                           </div>
@@ -286,7 +286,7 @@ export default function NewTestCasePage() {
                               value={step.expected_result}
                               onChange={(e) => updateStep(index, 'expected_result', e.target.value)}
                               placeholder="Describe expected result..."
-                              className="w-full p-3 border-2 border-black bg-white focus:border-3 focus:outline-none focus:border-[rgb(0,191,255)] transition-all min-h-[60px]"
+                              className="w-full p-3 border-2 border-black bg-white focus:border-3 focus:outline-none focus:border-[rgb(147,197,253)] transition-all min-h-[60px]"
                               rows={2}
                             />
                           </div>
@@ -312,7 +312,7 @@ export default function NewTestCasePage() {
                 value={formData.expectedResult}
                 onChange={(e) => setFormData({ ...formData, expectedResult: e.target.value })}
                 placeholder="Describe overall expected result of this test case..."
-                className="w-full p-4 border-2 border-black bg-white focus:border-3 focus:outline-none focus:border-[rgb(0,191,255)] transition-all min-h-[80px]"
+                className="w-full p-4 border-2 border-black bg-white focus:border-3 focus:outline-none focus:border-[rgb(147,197,253)] transition-all min-h-[80px]"
                 rows={3}
               />
             </div>

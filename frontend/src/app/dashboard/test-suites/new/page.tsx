@@ -76,14 +76,14 @@ export default function NewTestSuitePage() {
 
         <NeoCard>
           {error && (
-            <div className="border-2 border-black bg-[rgb(239,68,68)] p-4 mb-6 font-bold flex items-center gap-2">
+            <div className="border-2 border-black bg-[rgb(252,165,165)] p-4 mb-6 font-bold flex items-center gap-2">
               {error}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="flex items-center gap-4 p-6 bg-[rgb(57,255,20)]/10 border-2 border-black">
-              <div className="w-16 h-16 bg-[rgb(57,255,20)] border-2 border-black flex items-center justify-center">
+            <div className="flex items-center gap-4 p-6 bg-[rgb(134,239,172)]/10 border-2 border-black">
+              <div className="w-16 h-16 bg-[rgb(134,239,172)] border-2 border-black flex items-center justify-center">
                 <FolderOpen className="w-8 h-8" />
               </div>
               <div>
@@ -110,7 +110,7 @@ export default function NewTestSuitePage() {
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 placeholder="Describe what this test suite covers..."
-                className="w-full p-4 border-2 border-black bg-white focus:border-3 focus:outline-none focus:border-[rgb(0,191,255)] transition-all min-h-[120px]"
+                className="w-full p-4 border-2 border-black bg-white focus:border-3 focus:outline-none focus:border-[rgb(147,197,253)] transition-all min-h-[120px]"
                 rows={4}
               />
             </div>

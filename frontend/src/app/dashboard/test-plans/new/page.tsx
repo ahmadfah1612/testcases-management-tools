@@ -215,7 +215,7 @@ export default function NewTestPlanPage() {
                           <div className="flex items-center gap-3">
                             <div className="flex-shrink-0">
                               {allSuiteSelected ? (
-                                <CheckSquare className="w-6 h-6 text-[rgb(57,255,20)]" />
+                                <CheckSquare className="w-6 h-6 text-[rgb(134,239,172)]" />
                               ) : (
                                 <Square className="w-6 h-6" />
                               )}
@@ -238,7 +238,7 @@ export default function NewTestPlanPage() {
                               key={testCase.id}
                               className={`border-2 p-4 cursor-pointer transition-all ${
                                 selectedTestCases.includes(testCase.id)
-                                  ? 'border-[rgb(57,255,20)] bg-[rgb(57,255,20)]/10'
+                                  ? 'border-[rgb(134,239,172)] bg-[rgb(134,239,172)]/10'
                                   : 'border-black bg-white'
                               }`}
                               onClick={(e) => {
@@ -261,7 +261,7 @@ export default function NewTestPlanPage() {
                                 <div className="flex-shrink-0">
                                   <div className={`w-6 h-6 border-2 flex items-center justify-center ${
                                     selectedTestCases.includes(testCase.id)
-                                      ? 'border-black bg-[rgb(57,255,20)]'
+                                      ? 'border-black bg-[rgb(134,239,172)]'
                                       : 'border-black bg-white'
                                   }`}>
                                     {selectedTestCases.includes(testCase.id) && '✓'}

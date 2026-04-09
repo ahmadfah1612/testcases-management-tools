@@ -110,12 +110,12 @@ export default function TestSuitesPage() {
               className="hover:translate-y-1 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all h-full"
             >
               <div className="flex items-start justify-between mb-4">
-                <div className="p-3 bg-[rgb(57,255,20)] border-2 border-black cursor-pointer" onClick={() => router.push(`/dashboard/test-suites/${suite.id}`)}>
+                <div className="p-3 bg-[rgb(134,239,172)] border-2 border-black cursor-pointer" onClick={() => router.push(`/dashboard/test-suites/${suite.id}`)}>
                   <FolderOpen className="w-6 h-6" />
                 </div>
                 <div className="flex items-center gap-2">
                   {!suite.isOwner && suite.collaborationRole && (
-                    <span className="flex items-center gap-1 px-2 py-1 border-2 border-black bg-[rgb(0,191,255)] font-bold text-xs uppercase">
+                    <span className="flex items-center gap-1 px-2 py-1 border-2 border-black bg-[rgb(147,197,253)] font-bold text-xs uppercase">
                       <Users className="w-3 h-3" />
                       Shared
                     </span>
@@ -191,7 +191,7 @@ export default function TestSuitesPage() {
             <h2 className="text-2xl font-bold uppercase mb-4">Delete Test Suite</h2>
 
             <div className="space-y-4">
-              <div className="border-2 border-black bg-[rgb(255,255,0)]/20 p-4">
+              <div className="border-2 border-black bg-[rgb(253,224,71)]/20 p-4">
                 <p className="font-bold">
                   Are you sure you want to delete <strong>&quot;{deleteModal.name}&quot;</strong>?
                 </p>

@@ -140,31 +140,31 @@ export default function ReportsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           <div className="border-4 border-black bg-white p-4 hover:shadow-[2px_2px_0px_rgba(0,0,0,1)] transition-all">
             <div className="flex items-center gap-3 mb-2">
-              <Activity className="w-8 h-8 text-[rgb(0,191,255)]" />
+              <Activity className="w-8 h-8 text-[rgb(147,197,253)]" />
               <div className="text-sm text-gray-600 uppercase">Test Cases</div>
             </div>
             <div className="text-5xl font-bold">{stats.totalCases}</div>
           </div>
 
-          <div className="border-4 border-black bg-[rgb(57,255,20)]/20 p-4 hover:shadow-[2px_2px_0px_rgba(0,0,0,1)] transition-all">
+          <div className="border-4 border-black bg-[rgb(134,239,172)]/20 p-4 hover:shadow-[2px_2px_0px_rgba(0,0,0,1)] transition-all">
             <div className="flex items-center gap-3 mb-2">
-              <Activity className="w-8 h-8 text-[rgb(57,255,20)]" />
+              <Activity className="w-8 h-8 text-[rgb(134,239,172)]" />
               <div className="text-sm text-gray-600 uppercase">Test Suites</div>
             </div>
             <div className="text-5xl font-bold">{stats.totalSuites}</div>
           </div>
 
-          <div className="border-4 border-black bg-[rgb(255,105,180)]/20 p-4 hover:shadow-[2px_2px_0px_rgba(0,0,0,1)] transition-all">
+          <div className="border-4 border-black bg-[rgb(249,168,212)]/20 p-4 hover:shadow-[2px_2px_0px_rgba(0,0,0,1)] transition-all">
             <div className="flex items-center gap-3 mb-2">
-              <Activity className="w-8 h-8 text-[rgb(255,105,180)]" />
+              <Activity className="w-8 h-8 text-[rgb(249,168,212)]" />
               <div className="text-sm text-gray-600 uppercase">Test Plans</div>
             </div>
             <div className="text-5xl font-bold">{stats.totalPlans}</div>
           </div>
 
-          <div className="border-4 border-black bg-[rgb(255,255,0)]/20 p-4 hover:shadow-[2px_2px_0px_rgba(0,0,0,1)] transition-all">
+          <div className="border-4 border-black bg-[rgb(253,224,71)]/20 p-4 hover:shadow-[2px_2px_0px_rgba(0,0,0,1)] transition-all">
             <div className="flex items-center gap-3 mb-2">
-              <Activity className="w-8 h-8 text-[rgb(255,255,0)]" />
+              <Activity className="w-8 h-8 text-[rgb(253,224,71)]" />
               <div className="text-sm text-gray-600 uppercase">Test Runs</div>
             </div>
             <div className="text-5xl font-bold">{stats.totalRuns}</div>
@@ -172,7 +172,7 @@ export default function ReportsPage() {
 
           <div className="border-4 border-black bg-white p-4 hover:shadow-[2px_2px_0px_rgba(0,0,0,1)] transition-all">
             <div className="flex items-center gap-3 mb-2">
-              <Activity className="w-8 h-8 text-[rgb(0,191,255)]" />
+              <Activity className="w-8 h-8 text-[rgb(147,197,253)]" />
               <div className="text-sm text-gray-600 uppercase">Overall Pass Rate</div>
             </div>
             <div className="text-5xl font-bold">{stats.passRate.toFixed(1)}%</div>
@@ -193,10 +193,10 @@ export default function ReportsPage() {
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {passTrend && (
-              <div className="border-4 border-black bg-[rgb(57,255,20)]/10 p-4 hover:shadow-[2px_2px_0px_rgba(0,0,0,1)] transition-all">
+              <div className="border-4 border-black bg-[rgb(134,239,172)]/10 p-4 hover:shadow-[2px_2px_0px_rgba(0,0,0,1)] transition-all">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 bg-[rgb(57,255,20)] border-2 border-black"></div>
+                    <div className="w-6 h-6 bg-[rgb(134,239,172)] border-2 border-black"></div>
                     <span className="text-lg font-bold uppercase">Passed</span>
                   </div>
                   <div className="text-right">
@@ -206,15 +206,15 @@ export default function ReportsPage() {
                     </div>
                   </div>
                 </div>
-                {passTrend._count > (failTrend?._count || 0) && <TrendingUp className="w-5 h-5 text-[rgb(57,255,20)] inline ml-2" />}
+                {passTrend._count > (failTrend?._count || 0) && <TrendingUp className="w-5 h-5 text-[rgb(134,239,172)] inline ml-2" />}
               </div>
             )}
 
             {failTrend && (
-              <div className="border-4 border-black bg-[rgb(239,68,68)]/10 p-4 hover:shadow-[2px_2px_0px_rgba(0,0,0,1)] transition-all">
+              <div className="border-4 border-black bg-[rgb(252,165,165)]/10 p-4 hover:shadow-[2px_2px_0px_rgba(0,0,0,1)] transition-all">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 bg-[rgb(239,68,68)] border-2 border-black"></div>
+                    <div className="w-6 h-6 bg-[rgb(252,165,165)] border-2 border-black"></div>
                     <span className="text-lg font-bold uppercase">Failed</span>
                   </div>
                   <div className="text-right">
@@ -224,7 +224,7 @@ export default function ReportsPage() {
                     </div>
                   </div>
                 </div>
-                {failTrend._count > (passTrend?._count || 0) && <TrendingDown className="w-5 h-5 text-[rgb(239,68,68)] inline ml-2" />}
+                {failTrend._count > (passTrend?._count || 0) && <TrendingDown className="w-5 h-5 text-[rgb(252,165,165)] inline ml-2" />}
               </div>
             )}
 
@@ -259,11 +259,11 @@ export default function ReportsPage() {
               <div className="grid grid-cols-3 gap-4 mt-4">
                 <div>
                   <div className="text-sm text-gray-600 uppercase">Passed</div>
-                  <div className="text-4xl font-bold text-[rgb(57,255,20)]">{stats.results.PASS || 0}</div>
+                  <div className="text-4xl font-bold text-[rgb(134,239,172)]">{stats.results.PASS || 0}</div>
                 </div>
                 <div>
                   <div className="text-sm text-gray-600 uppercase">Failed</div>
-                  <div className="text-4xl font-bold text-[rgb(239,68,68)]">{stats.results.FAIL || 0}</div>
+                  <div className="text-4xl font-bold text-[rgb(252,165,165)]">{stats.results.FAIL || 0}</div>
                 </div>
                 <div>
                   <div className="text-sm text-gray-600 uppercase">Skipped</div>
@@ -274,7 +274,7 @@ export default function ReportsPage() {
           </div>
 
           <div className="flex items-start gap-4 p-4 border-2 border-black bg-gray-50">
-            <Activity className="w-8 h-8 text-[rgb(0,191,255)] flex-shrink-0" />
+            <Activity className="w-8 h-8 text-[rgb(147,197,253)] flex-shrink-0" />
             <div>
               <h3 className="text-lg font-bold uppercase mb-1">Pass Rate Analysis</h3>
               <div className="mt-2">

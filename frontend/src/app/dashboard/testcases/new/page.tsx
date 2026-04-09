@@ -92,7 +92,7 @@ export default function NewTestCasePage() {
               >
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-4">
-                    <div className="p-3 bg-[rgb(57,255,20)] border-2 border-black">
+                    <div className="p-3 bg-[rgb(134,239,172)] border-2 border-black">
                       <FolderOpen className="w-6 h-6" />
                     </div>
                     <div>

@@ -8,7 +8,7 @@ const NeoInput = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputEleme
         ref={ref}
         className={cn(
           'border-2 border-black bg-white px-4 py-2',
-          'focus:border-3 focus:outline-none focus:border-[rgb(0,191,255)]',
+          'focus:border-3 focus:outline-none focus:border-[rgb(147,197,253)]',
           'transition-all',
           className
         )}

@@ -79,9 +79,9 @@ export default function TestCaseDetailPage() {
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
       'DRAFT': 'bg-gray-200',
-      'READY': 'bg-[rgb(57,255,20)]',
-      'REVIEW': 'bg-[rgb(255,255,0)]',
-      'APPROVED': 'bg-[rgb(0,191,255)]'
+      'READY': 'bg-[rgb(134,239,172)]',
+      'REVIEW': 'bg-[rgb(253,224,71)]',
+      'APPROVED': 'bg-[rgb(147,197,253)]'
     };
     return colors[status] || 'bg-gray-200';
   };
@@ -89,9 +89,9 @@ export default function TestCaseDetailPage() {
   const getPriorityColor = (priority: string) => {
     const colors: Record<string, string> = {
       'LOW': 'bg-gray-200',
-      'MEDIUM': 'bg-[rgb(0,191,255)]',
-      'HIGH': 'bg-[rgb(255,105,180)]',
-      'CRITICAL': 'bg-[rgb(239,68,68)]'
+      'MEDIUM': 'bg-[rgb(147,197,253)]',
+      'HIGH': 'bg-[rgb(249,168,212)]',
+      'CRITICAL': 'bg-[rgb(252,165,165)]'
     };
     return colors[priority] || 'bg-gray-200';
   };
@@ -154,7 +154,7 @@ export default function TestCaseDetailPage() {
               </NeoButton>
             )}
             {!testCase.isOwner && testCase.collaborationRole && (
-              <span className="flex items-center gap-1 px-3 py-2 border-2 border-black bg-[rgb(0,191,255)] font-bold uppercase text-sm">
+              <span className="flex items-center gap-1 px-3 py-2 border-2 border-black bg-[rgb(147,197,253)] font-bold uppercase text-sm">
                 <Users className="w-4 h-4" />
                 Shared
               </span>
@@ -172,7 +172,7 @@ export default function TestCaseDetailPage() {
           {Array.isArray(testCase.tags) && testCase.tags.map((tag: string, index: number) => (
             <span
               key={index}
-              className="px-4 py-2 bg-[rgb(255,105,180)] border-2 border-black font-bold text-sm uppercase"
+              className="px-4 py-2 bg-[rgb(249,168,212)] border-2 border-black font-bold text-sm uppercase"
             >
               {tag}
             </span>
@@ -206,7 +206,7 @@ export default function TestCaseDetailPage() {
             {Array.isArray(testCase.steps) && testCase.steps.map((step: any, index: number) => (
               <NeoCard key={index} className="bg-gray-50">
                 <div className="flex gap-4">
-                  <div className="w-10 h-10 bg-[rgb(57,255,20)] border-2 border-black flex items-center justify-center font-bold text-lg flex-shrink-0">
+                  <div className="w-10 h-10 bg-[rgb(134,239,172)] border-2 border-black flex items-center justify-center font-bold text-lg flex-shrink-0">
                     {step.step_number}
                   </div>
                   <div className="flex-1 space-y-2">
@@ -266,7 +266,7 @@ export default function TestCaseDetailPage() {
               <h2 className="text-2xl font-bold uppercase mb-4">Delete Test Case</h2>
 
               <div className="space-y-4">
-                <div className="border-2 border-black bg-[rgb(255,255,0)]/20 p-4">
+                <div className="border-2 border-black bg-[rgb(253,224,71)]/20 p-4">
                   <p className="font-bold">
                     Are you sure you want to delete <strong>&quot;{testCase.title}&quot;</strong>?
                   </p>

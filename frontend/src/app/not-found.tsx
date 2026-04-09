@@ -24,7 +24,7 @@ export default function NotFound() {
       <div className="max-w-md w-full">
         <div className="bg-white border-3 border-black p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] text-center">
           <div className="flex justify-center mb-6">
-            <div className="w-24 h-24 bg-[rgb(255,105,180)] border-2 border-black flex items-center justify-center">
+            <div className="w-24 h-24 bg-[rgb(249,168,212)] border-2 border-black flex items-center justify-center">
               <AlertCircle className="w-12 h-12" />
             </div>
           </div>

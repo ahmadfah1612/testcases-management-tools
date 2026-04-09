@@ -9,11 +9,11 @@ const NeoButton = forwardRef<HTMLButtonElement, NeoButtonProps>(
   ({ className, variant = 'default', children, ...props }, ref) => {
     const variantClasses = {
       default: 'bg-white border-3 border-black',
-      primary: 'bg-[rgb(57,255,20)] border-3 border-black',
-      secondary: 'bg-[rgb(0,191,255)] border-3 border-black',
-      accent: 'bg-[rgb(255,105,180)] border-3 border-black',
-      warning: 'bg-[rgb(255,255,0)] border-3 border-black',
-      danger: 'bg-[rgb(239,68,68)] border-3 border-black',
+      primary: 'bg-[rgb(134,239,172)] border-3 border-black',
+      secondary: 'bg-[rgb(147,197,253)] border-3 border-black',
+      accent: 'bg-[rgb(249,168,212)] border-3 border-black',
+      warning: 'bg-[rgb(253,224,71)] border-3 border-black',
+      danger: 'bg-[rgb(252,165,165)] border-3 border-black',
     };
 
     return (

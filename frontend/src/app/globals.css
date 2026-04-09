@@ -1,11 +1,11 @@
 @import "tailwindcss";
 
 :root {
-  --neo-green: 57 255 20;
-  --neo-blue: 0 191 255;
-  --neo-pink: 255 105 180;
-  --neo-yellow: 255 255 0;
-  --neo-red: 239 68 68;
+  --neo-green: 134 239 172;
+  --neo-blue: 147 197 253;
+  --neo-pink: 249 168 212;
+  --neo-yellow: 253 224 71;
+  --neo-red: 252 165 165;
 }
 
 @layer base {

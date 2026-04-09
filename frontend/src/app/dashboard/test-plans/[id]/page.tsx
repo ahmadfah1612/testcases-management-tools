@@ -334,7 +334,7 @@ export default function TestPlanDetailPage() {
                             <div className="flex items-center gap-3">
                               <div className="flex-shrink-0">
                                 {allSuiteSelected ? (
-                                  <CheckSquare className="w-6 h-6 text-[rgb(57,255,20)]" />
+                                  <CheckSquare className="w-6 h-6 text-[rgb(134,239,172)]" />
                                 ) : (
                                   <Square className="w-6 h-6" />
                                 )}
@@ -362,7 +362,7 @@ export default function TestPlanDetailPage() {
                                   key={testCase.id}
                                   className={`border-2 p-4 cursor-pointer transition-all ${
                                     current.includes(testCase.id)
-                                      ? 'border-[rgb(57,255,20)] bg-[rgb(57,255,20)]/10'
+                                      ? 'border-[rgb(134,239,172)] bg-[rgb(134,239,172)]/10'
                                       : 'border-black bg-white'
                                   }`}
                                   onClick={(e) => {
@@ -385,7 +385,7 @@ export default function TestPlanDetailPage() {
                                     <div className="flex-shrink-0">
                                       <div className={`w-6 h-6 border-2 flex items-center justify-center ${
                                         current.includes(testCase.id)
-                                          ? 'border-black bg-[rgb(57,255,20)]'
+                                          ? 'border-black bg-[rgb(134,239,172)]'
                                           : 'border-black bg-white'
                                       }`}>
                                         {current.includes(testCase.id) && '✓'}
@@ -441,15 +441,15 @@ export default function TestPlanDetailPage() {
                 className="border-2 border-black bg-white p-4 flex items-center justify-between"
               >
                 <div className="flex items-center gap-3">
-                  <PlayCircle className="w-5 h-5 text-[rgb(57,255,20)]" />
+                  <PlayCircle className="w-5 h-5 text-[rgb(134,239,172)]" />
                   <div>
                     <h3 className="font-bold uppercase">{run.name}</h3>
                     <div className="flex items-center gap-2 text-sm text-gray-600">
                       <Clock className="w-4 h-4" />
                       <span>{new Date(run.startedAt).toLocaleDateString()}</span>
                       <span className={`px-2 py-1 text-xs font-bold border-2 border-black uppercase ${
-                        run.status === 'COMPLETED' ? 'bg-[rgb(57,255,20)]' :
-                        run.status === 'RUNNING' ? 'bg-[rgb(255,255,0)]' :
+                        run.status === 'COMPLETED' ? 'bg-[rgb(134,239,172)]' :
+                        run.status === 'RUNNING' ? 'bg-[rgb(253,224,71)]' :
                         'bg-gray-200'
                       }`}>
                         {run.status}
@@ -476,7 +476,7 @@ export default function TestPlanDetailPage() {
             <h2 className="text-2xl font-bold uppercase mb-4">Delete Test Plan</h2>
 
             <div className="space-y-4">
-              <div className="border-2 border-black bg-[rgb(255,255,0)]/20 p-4">
+              <div className="border-2 border-black bg-[rgb(253,224,71)]/20 p-4">
                 <p className="font-bold">
                   Are you sure you want to delete <strong>&quot;{deleteModal.name}&quot;</strong>?
                 </p>

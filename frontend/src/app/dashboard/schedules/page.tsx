@@ -97,7 +97,7 @@ export default function SchedulesPage() {
   return (
     <div className="min-h-screen bg-gray-100 p-8">
       <div className="max-w-7xl mx-auto space-y-6">
-        <div className="border-2 border-black bg-[rgb(255,255,0)]/30 p-4 mb-6">
+        <div className="border-2 border-black bg-[rgb(253,224,71)]/30 p-4 mb-6">
           <p className="font-bold uppercase text-sm">
             ⚠️ This feature is still under development
           </p>
@@ -125,7 +125,7 @@ export default function SchedulesPage() {
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2 flex-wrap">
-                      <span className={`px-3 py-1 text-xs font-bold border-2 border-black uppercase ${schedule.active ? 'bg-[rgb(57,255,20)]' : 'bg-gray-400'}`}>
+                      <span className={`px-3 py-1 text-xs font-bold border-2 border-black uppercase ${schedule.active ? 'bg-[rgb(134,239,172)]' : 'bg-gray-400'}`}>
                         {schedule.active ? 'ACTIVE' : 'PAUSED'}
                       </span>
                     </div>

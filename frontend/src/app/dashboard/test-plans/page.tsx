@@ -114,14 +114,14 @@ export default function TestPlansPage() {
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
                     <div className="flex items-center gap-3 mb-3">
-                      <div className="p-2 bg-[rgb(57,255,20)] border-2 border-black">
+                      <div className="p-2 bg-[rgb(134,239,172)] border-2 border-black">
                         <PlayCircle className="w-6 h-6" />
                       </div>
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="border-2 border-black px-3 py-1 font-bold text-sm">
                           {plan._count.testCases} cases
                         </span>
-                        <span className="border-2 border-black px-3 py-1 font-bold text-sm bg-[rgb(0,191,255)]/20">
+                        <span className="border-2 border-black px-3 py-1 font-bold text-sm bg-[rgb(147,197,253)]/20">
                           {plan._count.runs} runs
                         </span>
                       </div>
@@ -190,7 +190,7 @@ export default function TestPlansPage() {
             <h2 className="text-2xl font-bold uppercase mb-4">Delete Test Plan</h2>
 
             <div className="space-y-4">
-              <div className="border-2 border-black bg-[rgb(255,255,0)]/20 p-4">
+              <div className="border-2 border-black bg-[rgb(253,224,71)]/20 p-4">
                 <p className="font-bold">
                   Are you sure you want to delete <strong>&quot;{deleteModal.name}&quot;</strong>?
                 </p>

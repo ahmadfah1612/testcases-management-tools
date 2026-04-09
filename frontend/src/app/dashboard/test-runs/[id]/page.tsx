@@ -180,22 +180,22 @@ export default function TestRunDetailPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'PASS':
-        return 'bg-[rgb(57,255,20)]';
+        return 'bg-[rgb(134,239,172)]';
       case 'FAIL':
-        return 'bg-[rgb(239,68,68)]';
+        return 'bg-[rgb(252,165,165)]';
       case 'SKIP':
         return 'bg-gray-300';
       default:
-        return 'bg-[rgb(0,191,255)]';
+        return 'bg-[rgb(147,197,253)]';
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'PASS':
-        return <CheckCircle className="w-5 h-5 text-[rgb(57,255,20)]" />;
+        return <CheckCircle className="w-5 h-5 text-[rgb(134,239,172)]" />;
       case 'FAIL':
-        return <XCircle className="w-5 h-5 text-[rgb(239,68,68)]" />;
+        return <XCircle className="w-5 h-5 text-[rgb(252,165,165)]" />;
       default:
         return <SkipForward className="w-5 h-5 text-gray-500" />;
     }
@@ -272,7 +272,7 @@ export default function TestRunDetailPage() {
         </div>
         <div className="flex items-center gap-3">
           {!testRun.isOwner && testRun.collaborationRole && (
-            <span className="flex items-center gap-1 px-3 py-2 border-2 border-black bg-[rgb(0,191,255)] font-bold uppercase text-sm">
+            <span className="flex items-center gap-1 px-3 py-2 border-2 border-black bg-[rgb(147,197,253)] font-bold uppercase text-sm">
               <Users className="w-4 h-4" />
               Shared
             </span>
@@ -305,12 +305,12 @@ export default function TestRunDetailPage() {
             <div className="text-sm text-gray-600 uppercase mb-1">Total</div>
             <div className="text-4xl font-bold">{testRun.resultsCount}</div>
           </div>
-          <div className="border-4 border-black bg-[rgb(57,255,20)] p-4 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-shadow">
+          <div className="border-4 border-black bg-[rgb(134,239,172)] p-4 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-shadow">
             <div className="text-sm text-gray-600 uppercase mb-1">Passed</div>
             <div className="text-3xl font-bold text-black">{passed}</div>
             <div className="text-2xl font-bold text-black mt-2">{passedPercent}%</div>
           </div>
-          <div className="border-4 border-black bg-[rgb(239,68,68)] p-4 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-shadow">
+          <div className="border-4 border-black bg-[rgb(252,165,165)] p-4 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-shadow">
             <div className="text-sm text-gray-600 uppercase mb-1">Failed</div>
             <div className="text-3xl font-bold text-black">{failed}</div>
             <div className="text-2xl font-bold text-black mt-2">{failedPercent}%</div>
@@ -341,7 +341,7 @@ export default function TestRunDetailPage() {
                     cy="100"
                     r="80"
                     fill="transparent"
-                    stroke="rgb(57,255,20)"
+                    stroke="rgb(134,239,172)"
                     strokeWidth="40"
                     strokeDasharray={`${passedPercent * 5.02} 500`}
                     transform="rotate(-90 100 100)"
@@ -351,7 +351,7 @@ export default function TestRunDetailPage() {
                     cy="100"
                     r="80"
                     fill="transparent"
-                    stroke="rgb(239,68,68)"
+                    stroke="rgb(252,165,165)"
                     strokeWidth="40"
                     strokeDasharray={`${failedPercent * 5.02} 500`}
                     strokeDashoffset={`-${passedPercent * 5.02}`}
@@ -372,11 +372,11 @@ export default function TestRunDetailPage() {
               </div>
               <div className="space-y-2">
                 <div className="flex items-center gap-3">
-                  <div className="w-4 h-4 bg-[rgb(57,255,20)] border-2 border-black"></div>
+                  <div className="w-4 h-4 bg-[rgb(134,239,172)] border-2 border-black"></div>
                   <span className="font-bold uppercase">Passed ({passedPercent}%)</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="w-4 h-4 bg-[rgb(239,68,68)] border-2 border-black"></div>
+                  <div className="w-4 h-4 bg-[rgb(252,165,165)] border-2 border-black"></div>
                   <span className="font-bold uppercase">Failed ({failedPercent}%)</span>
                 </div>
                 <div className="flex items-center gap-3">

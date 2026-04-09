@@ -177,7 +177,7 @@ export default function EditSchedulePage({ params }: { params: { id: string } })
         </div>
 
         <NeoCard>
-          <div className="border-2 border-black bg-[rgb(255,255,0)]/30 p-4 mb-6">
+          <div className="border-2 border-black bg-[rgb(253,224,71)]/30 p-4 mb-6">
             <p className="font-bold uppercase text-sm">
               ⚠️ This feature is still under development
             </p>
