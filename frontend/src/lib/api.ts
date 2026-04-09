@@ -4,7 +4,11 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
 class ApiClient {
   private async getSession() {
-    const { data: { session } } = await supabase.auth.getSession();
+    // Race against a timeout so a hanging Supabase auto-refresh never blocks the app
+    const session = await Promise.race([
+      supabase.auth.getSession().then(r => r.data.session),
+      new Promise<null>(resolve => setTimeout(() => resolve(null), 8000)),
+    ]);
     return session;
   }
 
@@ -21,9 +25,20 @@ class ApiClient {
     return headers;
   }
 
+  // All HTTP requests go through this so every call has a hard timeout.
+  private async fetchWithTimeout(url: string, options: RequestInit): Promise<Response> {
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), 15000);
+    try {
+      return await fetch(url, { ...options, signal: controller.signal });
+    } finally {
+      clearTimeout(id);
+    }
+  }
+
   async get(endpoint: string): Promise<any> {
     const headers = await this.getHeaders();
-    const response = await fetch(`${API_URL}${endpoint}`, { headers });
+    const response = await this.fetchWithTimeout(`${API_URL}${endpoint}`, { headers });
     return this.handleResponse(response, () => this.get(endpoint));
   }
 
@@ -37,7 +52,7 @@ class ApiClient {
     console.log('Body:', JSON.stringify(data));
 
     try {
-      const response = await fetch(url, {
+      const response = await this.fetchWithTimeout(url, {
         method: 'POST',
         headers,
         body: JSON.stringify(data),
@@ -55,7 +70,7 @@ class ApiClient {
 
   async put(endpoint: string, data: any): Promise<any> {
     const headers = await this.getHeaders();
-    const response = await fetch(`${API_URL}${endpoint}`, {
+    const response = await this.fetchWithTimeout(`${API_URL}${endpoint}`, {
       method: 'PUT',
       headers,
       body: JSON.stringify(data),
@@ -65,7 +80,7 @@ class ApiClient {
 
   async delete(endpoint: string): Promise<any> {
     const headers = await this.getHeaders();
-    const response = await fetch(`${API_URL}${endpoint}`, {
+    const response = await this.fetchWithTimeout(`${API_URL}${endpoint}`, {
       method: 'DELETE',
       headers,
     });
@@ -73,15 +88,19 @@ class ApiClient {
   }
 
   private async handleResponse(response: Response, retry?: () => Promise<any>): Promise<any> {
-    // Token rejected by backend — try to refresh once, then retry the request
+    // Token rejected — call getSession() which handles auto-refresh internally.
+    // Using getSession() (not refreshSession()) avoids explicit lock contention with
+    // Supabase's own auto-refresh that may already be in progress.
     if (response.status === 401) {
-      const { data: { session } } = await supabase.auth.refreshSession();
+      const session = await this.getSession();
       if (session && retry) {
         return retry();
       }
-      // Refresh failed — force re-login
+      // No valid session — sign out; onAuthStateChange(SIGNED_OUT) handles redirect
       await supabase.auth.signOut();
-      window.location.href = '/login';
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login';
+      }
       throw new Error('Session expired. Please log in again.');
     }
 
