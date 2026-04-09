@@ -21,14 +21,17 @@ interface DashboardStats {
 export default function DashboardPage() {
   const router = useRouter();
   const { user } = useAuth();
+  const userId = user?.id;
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user) {
+    if (userId) {
       fetchStats();
+    } else {
+      setLoading(false);
     }
-  }, [user]);
+  }, [userId]);
 
   const fetchStats = async () => {
     try {

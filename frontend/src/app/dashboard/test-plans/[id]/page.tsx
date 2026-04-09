@@ -49,8 +49,9 @@ export default function TestPlanDetailPage() {
   const router = useRouter();
   const params = useParams();
   const { user } = useAuth();
+  const userId = user?.id;
   const planId = params.id as string;
-  
+
   const [testPlan, setTestPlan] = useState<TestPlan | null>(null);
   const [allTestCases, setAllTestCases] = useState<TestCase[]>([]);
   const [selectedTestCases, setSelectedTestCases] = useState<string[]>([]);
@@ -64,11 +65,13 @@ export default function TestPlanDetailPage() {
   const testCaseLimit = 20;
 
   useEffect(() => {
-    if (user && planId) {
+    if (userId && planId) {
       fetchTestPlan();
       fetchTestCases();
+    } else {
+      setLoading(false);
     }
-  }, [user, planId, testCasePage]);
+  }, [userId, planId, testCasePage]);
 
   const fetchTestPlan = async () => {
     try {

@@ -18,6 +18,7 @@ interface TestPlan {
 export default function NewSchedulePage() {
   const router = useRouter();
   const { user } = useAuth();
+  const userId = user?.id;
   const [testPlans, setTestPlans] = useState<TestPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -32,10 +33,12 @@ export default function NewSchedulePage() {
   const [preset, setPreset] = useState<'custom' | 'daily' | 'weekly' | 'hourly'>('daily');
 
   useEffect(() => {
-    if (user) {
+    if (userId) {
       fetchTestPlans();
+    } else {
+      setLoading(false);
     }
-  }, [user]);
+  }, [userId]);
 
   const fetchTestPlans = async () => {
     try {

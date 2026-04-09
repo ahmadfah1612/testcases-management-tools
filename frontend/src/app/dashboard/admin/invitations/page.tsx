@@ -26,6 +26,7 @@ interface CodeUsage {
 
 export default function InvitationManagementPage() {
   const { user } = useAuth();
+  const userId = user?.id;
   const [codes, setCodes] = useState<InvitationCode[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -47,10 +48,12 @@ export default function InvitationManagementPage() {
   }, []);
 
   useEffect(() => {
-    if (user) {
+    if (userId) {
       fetchCodes();
+    } else {
+      setLoading(false);
     }
-  }, [user]);
+  }, [userId]);
 
   const fetchCodes = async () => {
     try {

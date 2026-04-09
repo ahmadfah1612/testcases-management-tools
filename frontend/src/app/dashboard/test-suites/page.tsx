@@ -26,6 +26,7 @@ interface TestSuite {
 export default function TestSuitesPage() {
   const router = useRouter();
   const { user } = useAuth();
+  const userId = user?.id;
   const [suites, setSuites] = useState<TestSuite[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteModal, setDeleteModal] = useState<{ id: string; name: string } | null>(null);
@@ -35,10 +36,12 @@ export default function TestSuitesPage() {
   const limit = 10;
 
   useEffect(() => {
-    if (user) {
+    if (userId) {
       fetchSuites();
+    } else {
+      setLoading(false);
     }
-  }, [user, page]);
+  }, [userId, page]);
 
 
   const fetchSuites = async () => {

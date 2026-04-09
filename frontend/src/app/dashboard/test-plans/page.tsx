@@ -25,6 +25,7 @@ interface TestPlan {
 export default function TestPlansPage() {
   const router = useRouter();
   const { user } = useAuth();
+  const userId = user?.id;
   const [testPlans, setTestPlans] = useState<TestPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteModal, setDeleteModal] = useState<{ id: string; name: string } | null>(null);
@@ -34,10 +35,12 @@ export default function TestPlansPage() {
   const limit = 10;
 
   useEffect(() => {
-    if (user) {
+    if (userId) {
       fetchTestPlans();
+    } else {
+      setLoading(false);
     }
-  }, [user, page]);
+  }, [userId, page]);
 
   const fetchTestPlans = async () => {
     try {

@@ -30,6 +30,7 @@ interface GroupedTestCases {
 export default function NewTestPlanPage() {
   const router = useRouter();
   const { user } = useAuth();
+  const userId = user?.id;
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [testCases, setTestCases] = useState<TestCase[]>([]);
@@ -40,12 +41,14 @@ export default function NewTestPlanPage() {
   const [totalTestCases, setTotalTestCases] = useState(0);
   const [totalTestCasesPages, setTotalTestCasesPages] = useState(1);
   const testCaseLimit = 20;
- 
+
   useEffect(() => {
-    if (user) {
+    if (userId) {
       fetchTestCases();
+    } else {
+      setFetchingTestCases(false);
     }
-  }, [user, testCasePage]);
+  }, [userId, testCasePage]);
  
   const fetchTestCases = async () => {
     try {

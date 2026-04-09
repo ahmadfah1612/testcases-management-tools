@@ -24,6 +24,7 @@ interface TestRun {
 export default function TestRunsPage() {
   const router = useRouter();
   const { user } = useAuth();
+  const userId = user?.id;
   const [testRuns, setTestRuns] = useState<TestRun[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -37,10 +38,12 @@ export default function TestRunsPage() {
   }, [filter]);
 
   useEffect(() => {
-    if (user) {
+    if (userId) {
       fetchTestRuns();
+    } else {
+      setLoading(false);
     }
-  }, [user, page, filter]);
+  }, [userId, page, filter]);
 
   const fetchTestRuns = async () => {
     try {

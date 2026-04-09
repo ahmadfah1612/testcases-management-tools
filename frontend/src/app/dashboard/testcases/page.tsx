@@ -54,6 +54,7 @@ const CSV_TEMPLATE_EXAMPLE = [
 export default function TestCasesPage() {
   const router = useRouter();
   const { user } = useAuth();
+  const userId = user?.id;
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [testCases, setTestCases] = useState<TestCase[]>([]);
@@ -80,10 +81,12 @@ export default function TestCasesPage() {
   }, [filter]);
 
   useEffect(() => {
-    if (user) {
+    if (userId) {
       fetchTestCases();
+    } else {
+      setLoading(false);
     }
-  }, [user, page, filter]);
+  }, [userId, page, filter]);
 
   // Close export dropdown when clicking outside
   useEffect(() => {

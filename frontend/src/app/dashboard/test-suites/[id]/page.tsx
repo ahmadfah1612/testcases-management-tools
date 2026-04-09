@@ -41,6 +41,7 @@ export default function TestSuiteDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { user } = useAuth();
+  const userId = user?.id;
   const suiteId = params.id as string;
 
   const [suite, setSuite] = useState<TestSuite | null>(null);
@@ -57,10 +58,12 @@ export default function TestSuiteDetailPage() {
   const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
-    if (user) {
+    if (userId) {
       fetchData();
+    } else {
+      setLoading(false);
     }
-  }, [user, suiteId]);
+  }, [userId, suiteId]);
 
   const fetchData = async () => {
     try {

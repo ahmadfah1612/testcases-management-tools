@@ -56,6 +56,7 @@ export default function TestRunDetailPage() {
   const router = useRouter();
   const params = useParams();
   const { user } = useAuth();
+  const userId = user?.id;
   const runId = params.id as string;
 
   const [testRun, setTestRun] = useState<TestRun | null>(null);
@@ -68,10 +69,12 @@ export default function TestRunDetailPage() {
   const [loadingResults, setLoadingResults] = useState(false);
 
   useEffect(() => {
-    if (user && runId) {
+    if (userId && runId) {
       fetchTestRun(false);
+    } else {
+      setLoading(false);
     }
-  }, [user, runId, resultsPage]);
+  }, [userId, runId, resultsPage]);
 
   const fetchTestRun = async (preserveDrafts: boolean = false) => {
     try {

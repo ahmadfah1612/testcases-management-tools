@@ -31,16 +31,19 @@ interface Trend {
 export default function ReportsPage() {
   const router = useRouter();
   const { user } = useAuth();
+  const userId = user?.id;
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<Stats | null>(null);
   const [trends, setTrends] = useState<Trend[]>([]);
   const [period, setPeriod] = useState('30');
 
   useEffect(() => {
-    if (user) {
+    if (userId) {
       fetchReports();
+    } else {
+      setLoading(false);
     }
-  }, [user, period]);
+  }, [userId, period]);
 
   const fetchReports = async () => {
     try {

@@ -21,14 +21,17 @@ interface TestSuite {
 export default function NewTestCasePage() {
   const router = useRouter();
   const { user } = useAuth();
+  const userId = user?.id;
   const [suites, setSuites] = useState<TestSuite[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user) {
+    if (userId) {
       fetchSuites();
+    } else {
+      setLoading(false);
     }
-  }, [user]);
+  }, [userId]);
 
   const fetchSuites = async () => {
     try {

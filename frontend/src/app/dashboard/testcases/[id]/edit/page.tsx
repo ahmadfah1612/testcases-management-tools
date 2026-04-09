@@ -34,6 +34,7 @@ export default function EditTestCasePage() {
   const params = useParams();
   const router = useRouter();
   const { user } = useAuth();
+  const userId = user?.id;
   const caseId = params.id as string;
 
   const [loading, setLoading] = useState(true);
@@ -50,10 +51,12 @@ export default function EditTestCasePage() {
   const [newTag, setNewTag] = useState('');
 
   useEffect(() => {
-    if (user) {
+    if (userId) {
       fetchTestCase();
+    } else {
+      setLoading(false);
     }
-  }, [user, caseId]);
+  }, [userId, caseId]);
 
   const fetchTestCase = async () => {
     try {

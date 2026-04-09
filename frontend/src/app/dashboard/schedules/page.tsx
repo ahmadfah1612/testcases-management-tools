@@ -27,15 +27,18 @@ interface Schedule {
 export default function SchedulesPage() {
   const router = useRouter();
   const { user } = useAuth();
+  const userId = user?.id;
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [loading, setLoading] = useState(true);
   const [toggleLoading, setToggleLoading] = useState<string | null>(null);
 
   useEffect(() => {
-    if (user) {
+    if (userId) {
       fetchSchedules();
+    } else {
+      setLoading(false);
     }
-  }, [user]);
+  }, [userId]);
 
   const fetchSchedules = async () => {
     try {

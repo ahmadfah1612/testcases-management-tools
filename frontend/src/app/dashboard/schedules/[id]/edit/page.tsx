@@ -34,11 +34,12 @@ interface Schedule {
 export default function EditSchedulePage({ params }: { params: { id: string } }) {
   const router = useRouter();
   const { user } = useAuth();
+  const userId = user?.id;
   const [schedule, setSchedule] = useState<Schedule | null>(null);
   const [testPlans, setTestPlans] = useState<TestPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  
+
   const [formData, setFormData] = useState({
     name: '',
     cronExpression: '0 0 * * *',
@@ -48,11 +49,13 @@ export default function EditSchedulePage({ params }: { params: { id: string } })
   const [preset, setPreset] = useState<'custom' | 'daily' | 'weekly' | 'hourly'>('daily');
 
   useEffect(() => {
-    if (user) {
+    if (userId) {
       fetchSchedule();
       fetchTestPlans();
+    } else {
+      setLoading(false);
     }
-  }, [user, params.id]);
+  }, [userId, params.id]);
 
   const fetchSchedule = async () => {
     try {
