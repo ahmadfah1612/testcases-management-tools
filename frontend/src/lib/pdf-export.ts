@@ -249,13 +249,25 @@ export async function exportTestRunToPDF(testRunBasic: TestRunData) {
     // ── Screenshot of distribution chart from page (if available) ────────────
     const chartEl = document.getElementById('test-run-distribution-chart');
     if (chartEl) {
-      y = ensureSpace(doc, y, 70);
-      const dataUrl = await toPng(chartEl, { backgroundColor: '#ffffff', pixelRatio: 1.5 });
-      const imgW = (pageWidth - 28) * 0.55; // 55% width, centered
-      const imgH = (chartEl.offsetHeight * imgW) / chartEl.offsetWidth;
-      const imgX = (pageWidth - imgW) / 2;
-      doc.addImage(dataUrl, 'PNG', imgX, y, imgW, imgH);
-      y += imgH + 10;
+      try {
+        y = ensureSpace(doc, y, 70);
+        const dataUrl = await toPng(chartEl, {
+          backgroundColor: '#ffffff',
+          pixelRatio: 1.5,
+          skipFonts: true,
+        });
+        const imgW = (pageWidth - 28) * 0.55;
+        const imgH = chartEl.offsetWidth > 0
+          ? (chartEl.offsetHeight * imgW) / chartEl.offsetWidth
+          : 0;
+        if (imgH > 0) {
+          const imgX = (pageWidth - imgW) / 2;
+          doc.addImage(dataUrl, 'PNG', imgX, y, imgW, imgH);
+          y += imgH + 10;
+        }
+      } catch (screenshotErr) {
+        console.warn('Chart screenshot skipped:', screenshotErr);
+      }
     }
 
     // ── Test Results Table ────────────────────────────────────────────────────
@@ -345,13 +357,25 @@ export async function exportReportToPDF(
       y = sectionTitle(doc, label, y, pageWidth);
       y += 4;
 
-      const dataUrl = await toPng(el, { backgroundColor: '#ffffff', pixelRatio: 1.5 });
-      const imgW    = pageWidth - 28;
-      const imgH    = (el.offsetHeight * imgW) / el.offsetWidth;
-
-      y = ensureSpace(doc, y, imgH + 10);
-      doc.addImage(dataUrl, 'PNG', 14, y, imgW, imgH);
-      y += imgH + 10;
+      try {
+        const dataUrl = await toPng(el, {
+          backgroundColor: '#ffffff',
+          pixelRatio: 1.5,
+          skipFonts: true,
+        });
+        const imgW = pageWidth - 28;
+        const imgH = el.offsetWidth > 0
+          ? (el.offsetHeight * imgW) / el.offsetWidth
+          : 0;
+        if (imgH > 0) {
+          y = ensureSpace(doc, y, imgH + 10);
+          doc.addImage(dataUrl, 'PNG', 14, y, imgW, imgH);
+          y += imgH + 10;
+        }
+      } catch (screenshotErr) {
+        console.warn(`Screenshot of #${elementId} skipped:`, screenshotErr);
+        y += 5;
+      }
     };
 
     await captureAndAdd('reports-stats',  'Overview Statistics');
