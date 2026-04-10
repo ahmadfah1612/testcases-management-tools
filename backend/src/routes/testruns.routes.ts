@@ -4,6 +4,38 @@ import { authMiddleware, AuthRequest } from '../middleware/auth.middleware';
 
 const router = Router();
 
+// ─── Public (no auth) ─────────────────────────────────────────────────────────
+
+router.get('/public/:id', async (req, res) => {
+  try {
+    const { data: run } = await supabase
+      .from('test_runs')
+      .select('*, test_plans (id, name, description)')
+      .eq('id', req.params.id)
+      .eq('is_public', true)
+      .single();
+    if (!run) return res.status(404).json({ error: 'Not found or not shared publicly' });
+
+    const { data: results } = await supabase
+      .from('test_results')
+      .select('*, test_cases (id, title, description, status, priority, custom_id)')
+      .eq('test_run_id', run.id)
+      .order('created_at', { ascending: false });
+
+    res.json({
+      id: run.id, name: run.name, status: run.status,
+      startedAt: run.started_at, completedAt: run.completed_at,
+      testPlan: run.test_plans,
+      results: (results || []).map((r: any) => ({
+        id: r.id, status: r.status, notes: r.notes, actualResult: r.actual_result,
+        testCase: r.test_cases,
+      })),
+    });
+  } catch {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 router.use(authMiddleware);
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -123,6 +155,7 @@ router.get('/:id', async (req: AuthRequest, res) => {
       ...runData,
       testPlan: runData.test_plans, testPlanId: runData.test_plan_id,
       startedBy: runData.started_by, startedAt: runData.started_at, completedAt: runData.completed_at,
+      isPublic: runData.is_public ?? false,
       isOwner: role === 'owner', collaborationRole: role, collaborators,
       results: (results || []).map((r: any) => ({ ...r, testCase: r.test_cases, testRunId: r.test_run_id, testCaseId: r.test_case_id, createdBy: r.created_by, createdAt: r.created_at, updatedAt: r.updated_at })),
       resultsCount: count || 0,
@@ -199,6 +232,29 @@ router.delete('/:id', async (req: AuthRequest, res) => {
     res.status(204).send();
   } catch (err) {
     console.error('Delete test run error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ─── Share toggle ─────────────────────────────────────────────────────────────
+
+router.patch('/:id/share', async (req: AuthRequest, res) => {
+  try {
+    const id   = req.params.id as string;
+    const role = await getRunRole(id, req.dbUserId! as string, req.userRole);
+    if (!role) return res.status(403).json({ error: 'Access denied' });
+    if (role !== 'owner') return res.status(403).json({ error: 'Only the owner can change sharing' });
+
+    const { isPublic } = req.body;
+    const { data, error } = await supabase
+      .from('test_runs')
+      .update({ is_public: isPublic })
+      .eq('id', id)
+      .select('is_public')
+      .single();
+    if (error) return res.status(500).json({ error: 'Failed to update sharing' });
+    res.json({ isPublic: data.is_public });
+  } catch {
     res.status(500).json({ error: 'Internal server error' });
   }
 });

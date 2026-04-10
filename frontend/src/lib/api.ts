@@ -78,6 +78,16 @@ class ApiClient {
     return this.handleResponse(response, () => this.put(endpoint, data));
   }
 
+  async patch(endpoint: string, data: any): Promise<any> {
+    const headers = await this.getHeaders();
+    const response = await this.fetchWithTimeout(`${API_URL}${endpoint}`, {
+      method: 'PATCH',
+      headers,
+      body: JSON.stringify(data),
+    });
+    return this.handleResponse(response, () => this.patch(endpoint, data));
+  }
+
   async delete(endpoint: string): Promise<any> {
     const headers = await this.getHeaders();
     const response = await this.fetchWithTimeout(`${API_URL}${endpoint}`, {

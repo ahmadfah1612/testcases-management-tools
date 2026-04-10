@@ -7,7 +7,7 @@ import { useAuth } from '@/lib/auth-context';
 import { NeoCard } from '@/components/neobrutalism/neo-card';
 import { NeoButton } from '@/components/neobrutalism/neo-button';
 import { NeoInput } from '@/components/neobrutalism/neo-input';
-import { ArrowLeft, CheckCircle, XCircle, SkipForward, Save, Download, Users } from 'lucide-react';
+import { ArrowLeft, CheckCircle, XCircle, SkipForward, Save, Download, Users, Share2, Copy, Check } from 'lucide-react';
 import { CollaboratorsPanel } from '@/components/CollaboratorsPanel';
 import { toast } from 'sonner';
 import { exportTestRunToPDF } from '@/lib/pdf-export';
@@ -48,6 +48,7 @@ interface TestRun {
   testPlan: { id: string; name: string; description: string };
   results: TestResult[];
   resultsCount: number;
+  isPublic: boolean;
   isOwner?: boolean;
   collaborationRole?: string;
 }
@@ -67,6 +68,10 @@ export default function TestRunDetailPage() {
   const [resultsPage, setResultsPage] = useState(1);
   const [resultsLimit] = useState(10);
   const [loadingResults, setLoadingResults] = useState(false);
+  const [showSharePanel, setShowSharePanel] = useState(false);
+  const [isPublic, setIsPublic] = useState(false);
+  const [togglingShare, setTogglingShare] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (userId && runId) {
@@ -82,6 +87,7 @@ export default function TestRunDetailPage() {
       const data = await api.get(`/testruns/${runId}?page=${resultsPage}&limit=${resultsLimit}&resultsOffset=${resultsOffset}`);
 
       setTestRun(data);
+      setIsPublic(data.isPublic ?? false);
 
       setDraftResults(prev => {
         if (preserveDrafts && Object.keys(prev).length > 0) {
@@ -178,6 +184,27 @@ export default function TestRunDetailPage() {
     } catch (error: any) {
       toast.error(error.message || 'Failed to complete test run');
     }
+  };
+
+  const handleToggleShare = async () => {
+    try {
+      setTogglingShare(true);
+      const next = !isPublic;
+      await api.patch(`/testruns/${runId}/share`, { isPublic: next });
+      setIsPublic(next);
+      toast.success(next ? 'Link sharing enabled' : 'Link sharing disabled');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to update sharing');
+    } finally {
+      setTogglingShare(false);
+    }
+  };
+
+  const handleCopyLink = () => {
+    const url = `${window.location.origin}/share/test-runs/${runId}`;
+    navigator.clipboard.writeText(url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   const getStatusColor = (status: string) => {
@@ -280,6 +307,16 @@ export default function TestRunDetailPage() {
               Shared
             </span>
           )}
+          {testRun.isOwner && (
+            <NeoButton
+              variant="secondary"
+              onClick={() => setShowSharePanel(p => !p)}
+              className={`flex items-center gap-2 ${isPublic ? 'bg-[rgb(134,239,172)]' : ''}`}
+            >
+              <Share2 className="w-4 h-4" />
+              {isPublic ? 'Shared' : 'Share'}
+            </NeoButton>
+          )}
           <NeoButton
             variant="primary"
             onClick={() => exportTestRunToPDF(testRun)}
@@ -300,6 +337,52 @@ export default function TestRunDetailPage() {
           )}
         </div>
       </div>
+
+      {showSharePanel && testRun.isOwner && (
+        <NeoCard className="border-2 border-black bg-white">
+          <h3 className="text-lg font-bold uppercase mb-4 flex items-center gap-2">
+            <Share2 className="w-5 h-5" />
+            Share Test Run Results
+          </h3>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <p className="font-bold">Public link sharing</p>
+              <p className="text-sm text-gray-600">
+                {isPublic
+                  ? 'Anyone with the link can view these results without logging in.'
+                  : 'Enable to generate a public link for sharing with external stakeholders.'}
+              </p>
+            </div>
+            <button
+              onClick={handleToggleShare}
+              disabled={togglingShare}
+              className={`relative inline-flex h-7 w-14 items-center rounded-none border-2 border-black transition-colors focus:outline-none disabled:opacity-50 ${isPublic ? 'bg-[rgb(134,239,172)]' : 'bg-gray-200'}`}
+            >
+              <span
+                className={`inline-block h-5 w-5 transform border-2 border-black bg-white transition-transform ${isPublic ? 'translate-x-7' : 'translate-x-1'}`}
+              />
+            </button>
+          </div>
+
+          {isPublic && (
+            <div className="flex items-center gap-2">
+              <input
+                readOnly
+                value={typeof window !== 'undefined' ? `${window.location.origin}/share/test-runs/${runId}` : ''}
+                className="flex-1 p-2 border-2 border-black bg-gray-50 font-mono text-sm focus:outline-none"
+              />
+              <NeoButton
+                variant="secondary"
+                onClick={handleCopyLink}
+                className="flex items-center gap-2 flex-shrink-0"
+              >
+                {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                {copied ? 'Copied!' : 'Copy'}
+              </NeoButton>
+            </div>
+          )}
+        </NeoCard>
+      )}
 
       <NeoCard>
         <h2 className="text-2xl font-bold uppercase mb-4">Run Statistics</h2>
