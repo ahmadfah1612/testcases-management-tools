@@ -106,7 +106,7 @@ router.get('/', async (req: AuthRequest, res) => {
     if (isAdmin(req)) {
       const { data: suites, error, count } = await supabase
         .from('test_suites')
-        .select(`*, children:test_suites (id, name, description, parent_id, created_by, created_at, updated_at)`, { count: 'exact' })
+        .select(`*, children:test_suites (id, name, code, description, parent_id, created_by, created_at, updated_at)`, { count: 'exact' })
         .is('parent_id', null)
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1);
@@ -117,7 +117,7 @@ router.get('/', async (req: AuthRequest, res) => {
 
     const { data: ownSuites } = await supabase
       .from('test_suites')
-      .select(`*, children:test_suites (id, name, description, parent_id, created_by, created_at, updated_at)`)
+      .select(`*, children:test_suites (id, name, code, description, parent_id, created_by, created_at, updated_at)`)
       .eq('created_by', req.dbUserId!)
       .is('parent_id', null)
       .order('created_at', { ascending: false });
@@ -134,7 +134,7 @@ router.get('/', async (req: AuthRequest, res) => {
     if (collabIds.length > 0) {
       const { data: cs } = await supabase
         .from('test_suites')
-        .select(`*, children:test_suites (id, name, description, parent_id, created_by, created_at, updated_at)`)
+        .select(`*, children:test_suites (id, name, code, description, parent_id, created_by, created_at, updated_at)`)
         .in('id', collabIds)
         .is('parent_id', null)
         .order('created_at', { ascending: false });
@@ -167,7 +167,7 @@ router.get('/:id', async (req: AuthRequest, res) => {
 
     const { data: testSuite, error } = await supabase
       .from('test_suites')
-      .select(`*, children:test_suites (id, name, description, parent_id, created_by, created_at, updated_at)`)
+      .select(`*, children:test_suites (id, name, code, description, parent_id, created_by, created_at, updated_at)`)
       .eq('id', id)
       .single();
     if (error || !testSuite) return res.status(404).json({ error: 'Test suite not found' });
@@ -183,10 +183,11 @@ router.get('/:id', async (req: AuthRequest, res) => {
 
 router.post('/', async (req: AuthRequest, res) => {
   try {
-    const { name, description, parentId } = req.body;
+    const { name, description, parentId, code } = req.body;
+    const normalizedCode = code ? code.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 20) : null;
     const { data: testSuite, error } = await supabase
       .from('test_suites')
-      .insert({ name, description, parent_id: parentId || null, created_by: req.dbUserId! })
+      .insert({ name, description, parent_id: parentId || null, created_by: req.dbUserId!, code: normalizedCode })
       .select()
       .single();
     if (error) return res.status(500).json({ error: 'Failed to create test suite', details: error.message });
@@ -205,10 +206,13 @@ router.put('/:id', async (req: AuthRequest, res) => {
     if (!role) return res.status(403).json({ error: 'Access denied' });
     if (role === 'viewer') return res.status(403).json({ error: 'Viewers cannot edit' });
 
-    const { name, description, parentId } = req.body;
+    const { name, description, parentId, code } = req.body;
+    const normalizedCode = code !== undefined ? (code ? code.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 20) : null) : undefined;
+    const updatePayload: any = { name, description, parent_id: parentId };
+    if (normalizedCode !== undefined) updatePayload.code = normalizedCode;
     const { data: testSuite, error } = await supabase
       .from('test_suites')
-      .update({ name, description, parent_id: parentId })
+      .update(updatePayload)
       .eq('id', id)
       .select()
       .single();

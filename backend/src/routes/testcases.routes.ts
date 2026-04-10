@@ -60,6 +60,33 @@ function parseJsonField(val: any) {
   return typeof val === 'string' ? JSON.parse(val) : (val ?? []);
 }
 
+async function generateCustomId(suiteId: string): Promise<string | null> {
+  const { data: suite } = await supabase
+    .from('test_suites')
+    .select('code')
+    .eq('id', suiteId)
+    .single();
+
+  if (!suite?.code) return null;
+
+  const prefix = suite.code + '-';
+  const { data: cases } = await supabase
+    .from('test_cases')
+    .select('custom_id')
+    .eq('suite_id', suiteId)
+    .not('custom_id', 'is', null);
+
+  let maxNum = 0;
+  for (const tc of (cases || [])) {
+    if (tc.custom_id?.startsWith(prefix)) {
+      const numPart = parseInt(tc.custom_id.slice(prefix.length), 10);
+      if (!isNaN(numPart) && numPart > maxNum) maxNum = numPart;
+    }
+  }
+
+  return `${suite.code}-${String(maxNum + 1).padStart(3, '0')}`;
+}
+
 // ─── List ─────────────────────────────────────────────────────────────────────
 
 router.get('/', async (req: AuthRequest, res) => {
@@ -212,6 +239,34 @@ router.post('/bulk-import', async (req: AuthRequest, res) => {
 
     if (toInsert.length === 0) return res.status(400).json({ imported: 0, failed: errors.length, errors });
 
+    // Build per-suite code + max sequence number for custom_id generation
+    const suiteCodeMap = new Map<string, string>();
+    const suiteCounterMap = new Map<string, number>();
+    const uniqueSuiteIds = [...new Set(toInsert.map((r: any) => r.suite_id))];
+    for (const sid of uniqueSuiteIds) {
+      const { data: suite } = await supabase.from('test_suites').select('code').eq('id', sid).single();
+      if (!suite?.code) continue;
+      suiteCodeMap.set(sid, suite.code);
+      const prefix = suite.code + '-';
+      const { data: cases } = await supabase.from('test_cases').select('custom_id').eq('suite_id', sid).not('custom_id', 'is', null);
+      let maxNum = 0;
+      for (const tc of (cases || [])) {
+        if (tc.custom_id?.startsWith(prefix)) {
+          const n = parseInt(tc.custom_id.slice(prefix.length), 10);
+          if (!isNaN(n) && n > maxNum) maxNum = n;
+        }
+      }
+      suiteCounterMap.set(sid, maxNum);
+    }
+    for (const record of toInsert) {
+      const code = suiteCodeMap.get(record.suite_id);
+      if (code) {
+        const next = (suiteCounterMap.get(record.suite_id) || 0) + 1;
+        suiteCounterMap.set(record.suite_id, next);
+        record.custom_id = `${code}-${String(next).padStart(3, '0')}`;
+      }
+    }
+
     const { data: inserted, error: insertError } = await supabase.from('test_cases').insert(toInsert).select('id');
     if (insertError) return res.status(500).json({ error: 'Failed to insert test cases', detail: insertError.message });
 
@@ -259,9 +314,10 @@ router.get('/:id', async (req: AuthRequest, res) => {
 router.post('/', async (req: AuthRequest, res) => {
   try {
     const { suiteId, title, description, steps, expectedResult, status, priority, tags } = req.body;
+    const customId = await generateCustomId(suiteId);
     const { data: tc, error } = await supabase
       .from('test_cases')
-      .insert({ suite_id: suiteId, title, description, steps: steps || [], expected_result: expectedResult, status: status || 'DRAFT', priority: priority || 'MEDIUM', tags: tags || [], created_by: req.dbUserId! })
+      .insert({ suite_id: suiteId, title, description, steps: steps || [], expected_result: expectedResult, status: status || 'DRAFT', priority: priority || 'MEDIUM', tags: tags || [], created_by: req.dbUserId!, custom_id: customId })
       .select()
       .single();
     if (error) return res.status(500).json({ error: 'Failed to create test case' });

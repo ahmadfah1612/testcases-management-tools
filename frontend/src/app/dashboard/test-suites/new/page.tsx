@@ -15,7 +15,8 @@ export default function NewTestSuitePage() {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    parentId: ''
+    parentId: '',
+    code: ''
   });
   const [error, setError] = useState('');
 
@@ -33,7 +34,8 @@ export default function NewTestSuitePage() {
       const payload = {
         name: formData.name,
         description: formData.description || null,
-        parentId: formData.parentId || null
+        parentId: formData.parentId || null,
+        code: formData.code.toUpperCase().replace(/[^A-Z0-9]/g, '') || null
       };
 
       console.log('📝 Submitting test suite:', payload);
@@ -102,6 +104,21 @@ export default function NewTestSuitePage() {
                 required
                 className="w-full"
               />
+            </div>
+
+            <div>
+              <label className="block font-bold uppercase mb-2">Prefix Code</label>
+              <NeoInput
+                type="text"
+                value={formData.code}
+                onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 20) })}
+                placeholder="e.g., LOGIN, API, AUTH"
+                className="w-full"
+                maxLength={20}
+              />
+              <p className="text-xs text-gray-500 mt-1 font-medium">
+                Used to auto-generate test case IDs (e.g., <strong>LOGIN-001</strong>). Alphanumeric only.
+              </p>
             </div>
 
             <div>

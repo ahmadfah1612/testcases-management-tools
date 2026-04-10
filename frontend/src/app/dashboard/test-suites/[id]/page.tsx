@@ -19,6 +19,7 @@ interface TestCase {
   description: string;
   status: string;
   priority: string;
+  custom_id: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -26,6 +27,7 @@ interface TestCase {
 interface TestSuite {
   id: string;
   name: string;
+  code: string | null;
   description: string | null;
   createdAt: string;
   updatedAt: string;
@@ -52,7 +54,8 @@ export default function TestSuiteDetailPage() {
   const [expandedChildren, setExpandedChildren] = useState<Set<string>>(new Set());
   const [editForm, setEditForm] = useState({
     name: '',
-    description: ''
+    description: '',
+    code: ''
   });
   const [exportOpen, setExportOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -76,7 +79,8 @@ export default function TestSuiteDetailPage() {
       setTestCases(Array.isArray(casesData) ? casesData : casesData.data || []);
       setEditForm({
         name: suiteData.name,
-        description: suiteData.description || ''
+        description: suiteData.description || '',
+        code: suiteData.code || ''
       });
     } catch (error) {
       toast.error('Failed to load test suite');
@@ -92,7 +96,8 @@ export default function TestSuiteDetailPage() {
     try {
       await api.put(`/testsuites/${suiteId}`, {
         name: editForm.name,
-        description: editForm.description || null
+        description: editForm.description || null,
+        code: editForm.code.toUpperCase().replace(/[^A-Z0-9]/g, '') || null
       });
       toast.success('Test suite updated successfully');
       setShowEditModal(false);
@@ -340,7 +345,12 @@ export default function TestSuiteDetailPage() {
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
+                          <div className="flex items-center gap-3 mb-2 flex-wrap">
+                            {testCase.custom_id && (
+                              <span className="px-2 py-0.5 text-xs font-bold border-2 border-black bg-[rgb(253,224,71)] font-mono">
+                                {testCase.custom_id}
+                              </span>
+                            )}
                             <h3 className="text-lg font-bold uppercase">{testCase.title}</h3>
                             <span className={`px-3 py-1 text-xs font-bold border-2 border-black ${getStatusColor(testCase.status)}`}>
                               {testCase.status}
@@ -381,6 +391,16 @@ export default function TestSuiteDetailPage() {
                 <div>
                   <div className="text-sm font-bold uppercase text-gray-600 mb-1">Name</div>
                   <div className="font-bold">{suite.name}</div>
+                </div>
+                <div>
+                  <div className="text-sm font-bold uppercase text-gray-600 mb-1">Prefix Code</div>
+                  {suite.code ? (
+                    <span className="inline-block px-2 py-0.5 text-sm font-bold border-2 border-black bg-[rgb(253,224,71)] font-mono">
+                      {suite.code}
+                    </span>
+                  ) : (
+                    <div className="text-sm text-gray-400 italic">Not set</div>
+                  )}
                 </div>
                 {suite.description && (
                   <div>
@@ -466,6 +486,21 @@ export default function TestSuiteDetailPage() {
                     required
                     className="w-full"
                   />
+                </div>
+
+                <div>
+                  <label className="block font-bold uppercase mb-2">Prefix Code</label>
+                  <NeoInput
+                    type="text"
+                    value={editForm.code}
+                    onChange={(e) => setEditForm({ ...editForm, code: e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 20) })}
+                    placeholder="e.g., LOGIN, API"
+                    className="w-full"
+                    maxLength={20}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    New test cases will use this prefix (e.g., <strong>{editForm.code || 'PREFIX'}-001</strong>).
+                  </p>
                 </div>
 
                 <div>

@@ -21,6 +21,7 @@ interface TestCase {
   status: string;
   priority: string;
   tags: string[];
+  custom_id: string | null;
   suite: { id: string; name: string };
   createdAt: string;
   updatedAt: string;
@@ -433,7 +434,14 @@ export default function TestCasesPage() {
                         </span>
                       ))}
                     </div>
-                    <h3 className="text-xl font-bold uppercase mb-2">{testCase.title}</h3>
+                    <div className="flex items-center gap-2 mb-2 flex-wrap">
+                      {testCase.custom_id && (
+                        <span className="px-2 py-0.5 text-xs font-bold border-2 border-black bg-[rgb(253,224,71)] font-mono">
+                          {testCase.custom_id}
+                        </span>
+                      )}
+                      <h3 className="text-xl font-bold uppercase">{testCase.title}</h3>
+                    </div>
                     {testCase.description && (
                       <p className="text-gray-600 text-sm mb-3 line-clamp-2">{testCase.description}</p>
                     )}

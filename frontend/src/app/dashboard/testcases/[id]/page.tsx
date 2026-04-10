@@ -25,6 +25,7 @@ interface TestCase {
   status: string;
   priority: string;
   tags: string[];
+  custom_id: string | null;
   suite: { id: string; name: string };
   createdAt: string;
   updatedAt: string;
@@ -129,7 +130,14 @@ export default function TestCaseDetailPage() {
               Back
             </NeoButton>
             <div>
-              <h1 className="text-4xl font-bold uppercase">{testCase.title}</h1>
+              <div className="flex items-center gap-3 mb-1">
+                {testCase.custom_id && (
+                  <span className="px-2 py-0.5 text-sm font-bold border-2 border-black bg-[rgb(253,224,71)] font-mono">
+                    {testCase.custom_id}
+                  </span>
+                )}
+                <h1 className="text-4xl font-bold uppercase">{testCase.title}</h1>
+              </div>
               <p className="text-gray-600">
                 Suite: {testCase.suite.name}
               </p>
