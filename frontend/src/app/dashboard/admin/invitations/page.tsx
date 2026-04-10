@@ -7,7 +7,7 @@ import { NeoButton } from '@/components/neobrutalism/neo-button';
 import { NeoBadge } from '@/components/neobrutalism/neo-badge';
 import { AlertCircle, Plus, Trash2, Clock, Users, RefreshCw, X } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
-import { supabase } from '@/lib/supabase';
+import { api } from '@/lib/api';
 
 interface InvitationCode {
   id: string;
@@ -58,29 +58,7 @@ export default function InvitationManagementPage() {
   const fetchCodes = async () => {
     try {
       setLoading(true);
-      
-      // Get session for auth
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        setError('Not authenticated');
-        return;
-      }
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/invitation`,
-        {
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`
-          }
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch invitation codes');
-      }
-
-      const data = await response.json();
+      const data = await api.get('/invitation');
       setCodes(data.data || []);
     } catch (err: any) {
       setError(err.message || 'Failed to load invitation codes');
@@ -91,47 +69,15 @@ export default function InvitationManagementPage() {
 
   const handleCreateCode = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!newCode.trim() || !expiresAt) {
       setError('Code and expiration date are required');
       return;
     }
-
     try {
       setCreating(true);
-      
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        setError('Not authenticated');
-        return;
-      }
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/invitation`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session.access_token}`
-          },
-          body: JSON.stringify({
-            code: newCode.trim(),
-            expires_at: new Date(expiresAt).toISOString()
-          })
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create invitation code');
-      }
-
-      // Reset form and close modal
+      await api.post('/invitation', { code: newCode.trim(), expires_at: new Date(expiresAt).toISOString() });
       setNewCode('');
       setShowCreateModal(false);
-      
-      // Refresh the list
       fetchCodes();
     } catch (err: any) {
       setError(err.message || 'Failed to create invitation code');
@@ -141,32 +87,9 @@ export default function InvitationManagementPage() {
   };
 
   const handleDeleteCode = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this invitation code?')) {
-      return;
-    }
-
+    if (!confirm('Are you sure you want to delete this invitation code?')) return;
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        setError('Not authenticated');
-        return;
-      }
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/invitation/${id}`,
-        {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`
-          }
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to delete invitation code');
-      }
-
+      await api.delete(`/invitation/${id}`);
       fetchCodes();
     } catch (err: any) {
       setError(err.message || 'Failed to delete invitation code');
@@ -176,33 +99,8 @@ export default function InvitationManagementPage() {
   const handleExtendCode = async (id: string) => {
     const newExpiration = prompt('Enter new expiration date (YYYY-MM-DD HH:MM):');
     if (!newExpiration) return;
-
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        setError('Not authenticated');
-        return;
-      }
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/invitation/${id}/extend`,
-        {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session.access_token}`
-          },
-          body: JSON.stringify({
-            expires_at: new Date(newExpiration).toISOString()
-          })
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to extend invitation code');
-      }
-
+      await api.patch(`/invitation/${id}/extend`, { expires_at: new Date(newExpiration).toISOString() });
       fetchCodes();
     } catch (err: any) {
       setError(err.message || 'Failed to extend invitation code');
@@ -211,27 +109,7 @@ export default function InvitationManagementPage() {
 
   const viewUsage = async (code: InvitationCode) => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        setError('Not authenticated');
-        return;
-      }
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/invitation/${code.id}/usage`,
-        {
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`
-          }
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch usage details');
-      }
-
-      const data = await response.json();
+      const data = await api.get(`/invitation/${code.id}/usage`);
       setCodeUsages(data.data || []);
       setSelectedCode(code);
       setShowUsageModal(true);
